@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#073f2c">
+  <meta name="description" content="Explore Khan Al Harir’s Syrian and Middle Eastern menu in New Cairo, then order from the Banafseg branch on Talabat.">
+  <title>Khan Al Harir خان الحرير | Syrian Restaurant in New Cairo</title>
+  <link rel="icon" href="assets/khan-logo.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/hero-shawarma.webp" as="image">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="header-mask" aria-hidden="true"></div>
+    <div class="header-inner">
+      <a class="brand" href="#home" aria-label="Khan Al Harir, back to home">
+        <img src="assets/khan-logo.webp" alt="" width="48" height="48">
+        <span class="brand-copy">
+          <strong>Khan Al Harir</strong>
+          <span lang="ar" dir="rtl">خان الحرير</span>
+        </span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#menu">Menu</a>
+        <a href="#about">About</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <a class="header-order external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">
+        Order on Talabat
+        <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8"/></svg>
+      </a>
+
+      <button class="language-toggle" id="languageToggle" type="button" aria-label="Switch to Arabic" aria-pressed="false">
+        <span class="language-toggle-icon" aria-hidden="true">ع</span>
+        <span class="language-toggle-label">العربية</span>
+      </button>
+
+      <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Open navigation">
+        <span></span><span></span>
+      </button>
+    </div>
+
+    <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation" hidden>
+      <div class="mobile-nav-links">
+        <a href="#menu">Menu <span>Explore the dishes</span></a>
+        <a href="#about">About <span>Our table in New Cairo</span></a>
+        <a href="#gallery">Gallery <span>A feast for the eyes</span></a>
+        <a href="#contact">Contact <span>Find the Banafseg branch</span></a>
+      </div>
+      <a class="button button-orange external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">Order on Talabat</a>
+      <p lang="ar" dir="rtl">خان الحرير — ضيافة الأكل السوري</p>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="home" aria-labelledby="heroTitle">
+      <img class="hero-image" src="assets/hero-shawarma.webp" alt="Illustrative shawarma with fries, onions, and fresh herbs" width="3840" height="2160">
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="hero-pattern" aria-hidden="true"></div>
+      <div class="hero-content shell">
+        <p class="hero-kicker">Syrian &amp; Middle Eastern cuisine <span>•</span> New Cairo</p>
+        <h1 id="heroTitle">Authentic Syrian<br>flavors, <em>made with love.</em></h1>
+        <div class="hero-bottom">
+          <p>From shawarma and charcoal grills to mezze and kunafa—there is always room for one more at the table.</p>
+          <div class="hero-actions">
+            <a class="button button-orange external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">
+              Order on Talabat
+              <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8"/></svg>
+            </a>
+            <a class="text-link text-link-light" href="#menu">View the menu <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="hero-arabic" lang="ar" dir="rtl" aria-hidden="true">خان الحرير</div>
+      <p class="hero-photo-note">Illustrative photography</p>
+    </section>
+
+    <section class="cuisine-gateways" aria-label="Explore the menu by cuisine">
+      <button class="cuisine-tile" type="button" data-category-link="grills">
+        <img src="assets/cuisine-grills-3840.webp" alt="Syrian mixed charcoal grill with lamb chops, kebab, kofta, shish tawook, vegetables, and flatbread" width="3840" height="2160" loading="lazy">
+        <span class="tile-scrim" aria-hidden="true"></span>
+        <span class="tile-copy"><small>From the coals</small><strong>Charcoal &amp; grills</strong><span>Explore the grill ↗</span></span>
+      </button>
+      <button class="cuisine-tile" type="button" data-category-link="appetizers">
+        <img src="assets/cuisine-mezze-3840.webp" alt="Syrian mezze spread with hummus, muhammara, baba ganoush, tabbouleh, kibbeh, falafel, grape leaves, and bread" width="3840" height="2160" loading="lazy">
+        <span class="tile-scrim" aria-hidden="true"></span>
+        <span class="tile-copy"><small>Made for sharing</small><strong>Mezze</strong><span>Start with a small plate ↗</span></span>
+      </button>
+      <a class="cuisine-tile" href="#about">
+        <img src="assets/cuisine-kitchen-3840.webp" alt="Chef finishing a Syrian mixed grill platter in a warm open kitchen" width="3840" height="2160" loading="lazy">
+        <span class="tile-scrim" aria-hidden="true"></span>
+        <span class="tile-copy"><small>Behind every plate</small><strong>Syrian kitchen</strong><span>See how we cook ↗</span></span>
+      </a>
+    </section>
+
+    <section class="menu-section section-pad" id="menu" aria-labelledby="menuTitle">
+      <div class="shell">
+        <div class="section-heading menu-heading">
+          <div>
+            <p class="eyebrow">The menu <span lang="ar" dir="rtl">المنيو</span></p>
+            <h2 id="menuTitle">Come hungry.<br><em>Leave happy.</em></h2>
+          </div>
+          <div class="menu-intro">
+            <p>Explore the restaurant’s published selection, from quick sandwiches to generous family trays.</p>
+            <p class="menu-source">Live prices and availability are confirmed on the Banafseg branch’s Talabat page. Some soup and dessert images are illustrative.</p>
+          </div>
+        </div>
+
+        <div class="menu-tools">
+          <label class="search-box" for="menuSearch">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+            <span class="sr-only">Search the menu</span>
+            <input id="menuSearch" type="search" placeholder="Search shawarma, kofta, كنافة…" autocomplete="off">
+            <button id="clearSearch" type="button" aria-label="Clear menu search" hidden>Clear</button>
+          </label>
+          <p class="menu-count" id="menuCount" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="category-wrap">
+          <div class="category-filters" id="categoryFilters" aria-label="Filter menu by category"></div>
+        </div>
+
+        <div class="menu-grid" id="menuGrid"></div>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <p lang="ar" dir="rtl">لا توجد نتائج</p>
+          <h3>No dishes found</h3>
+          <p>Try another search or browse the full menu.</p>
+          <button class="button button-green" id="resetFilters" type="button">Reset filters</button>
+        </div>
+
+        <div class="menu-more-wrap">
+          <button class="button button-outline" id="showMore" type="button">Show more dishes</button>
+          <a class="text-link external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">See the live menu on Talabat <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="order-section" aria-labelledby="orderTitle">
+      <div class="order-pattern" aria-hidden="true"></div>
+      <div class="shell order-inner">
+        <div>
+          <p class="eyebrow eyebrow-light">Your next meal is a few taps away</p>
+          <h2 id="orderTitle">Hungry?</h2>
+          <p class="order-script">Order your favorites on Talabat.</p>
+        </div>
+        <div class="order-action">
+          <p>Check the live menu, delivery availability, and today’s prices directly with the restaurant’s selected branch.</p>
+          <a class="button button-orange button-large external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">
+            Order now on <strong>talabat</strong>
+            <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8"/></svg>
+          </a>
+          <small>Ordering and payment are completed on Talabat.</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" id="about" aria-labelledby="aboutTitle">
+      <div class="about-image-wrap">
+        <img src="assets/arabic-table.webp" alt="Illustrative Middle Eastern table filled with shared dishes, rice, pastries, and salads" width="3840" height="2160" loading="lazy">
+        <p>Illustrative photography</p>
+      </div>
+      <div class="about-copy">
+        <p class="eyebrow">At the table <span lang="ar" dir="rtl">على السفرة</span></p>
+        <h2 id="aboutTitle">A taste of Syria,<br><em>at home in New Cairo.</em></h2>
+        <p>Khan Al Harir brings the generous spirit of a Syrian table to El Tagamo3. Shawarma, charcoal-grilled meats, colorful mezze, warm bread, and sweets all invite you to slow down and share.</p>
+        <p>Come for a quick sandwich, gather over a mixed grill, or send dinner home through Talabat. The menu offers both everyday favorites and generous meals for a full table.</p>
+        <div class="about-signature">
+          <img src="assets/khan-logo.webp" alt="" width="72" height="72" loading="lazy">
+          <p><strong>Khan Al Harir</strong><span>Syrian &amp; Middle Eastern restaurant</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery-section section-pad" id="gallery" aria-labelledby="galleryTitle">
+      <div class="shell">
+        <div class="section-heading gallery-heading">
+          <div>
+            <p class="eyebrow">From the kitchen <span lang="ar" dir="rtl">من المطبخ</span></p>
+            <h2 id="galleryTitle">A feast for the eyes.</h2>
+          </div>
+          <p>Restaurant listing photography, alongside clearly marked illustrative food imagery.</p>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid">
+          <button class="gallery-item gallery-wide" type="button" data-full="assets/menu/friends-tray.webp" data-caption="Friends Tray — restaurant listing photography">
+            <img src="assets/menu/friends-tray.webp" alt="Friends Tray with an assortment of grilled meats, chicken, and rice" width="3840" height="2160" loading="lazy">
+            <span>Friends Tray <small>Restaurant listing photo</small></span>
+          </button>
+          <button class="gallery-item gallery-tall" type="button" data-full="assets/menu/shawarma-saj.webp" data-caption="Shawarma Saj — restaurant listing photography">
+            <img src="assets/menu/shawarma-saj.webp" alt="Chicken shawarma wrapped in saj bread" width="3840" height="2160" loading="lazy">
+            <span>Shawarma Saj <small>Restaurant listing photo</small></span>
+          </button>
+          <button class="gallery-item" type="button" data-full="assets/hummus-bowl.webp" data-caption="Hummus and pita — illustrative photography">
+            <img src="assets/hummus-bowl.webp" alt="Illustrative bowls of hummus served with pita and olive oil" width="3840" height="2160" loading="lazy">
+            <span>Hummus &amp; pita <small>Illustrative photo</small></span>
+          </button>
+          <button class="gallery-item" type="button" data-full="assets/menu/charcoal-chicken.webp" data-caption="Charcoal Chicken — restaurant listing photography">
+            <img src="assets/menu/charcoal-chicken.webp" alt="Charcoal chicken served with fries, rice, and garlic sauce" width="3840" height="2160" loading="lazy">
+            <span>Charcoal Chicken <small>Restaurant listing photo</small></span>
+          </button>
+          <button class="gallery-item gallery-wide" type="button" data-full="assets/kunafa-illustrative.webp" data-caption="Kunafa — original illustrative photography">
+            <img src="assets/kunafa-illustrative.webp" alt="Illustrative golden kunafa with pistachios on a dark ceramic plate" width="3840" height="2160" loading="lazy">
+            <span>Kunafa <small>Illustrative photo</small></span>
+          </button>
+          <button class="gallery-item" type="button" data-full="assets/menu/lentil-soup.webp" data-caption="Lentil Soup — restaurant listing photography">
+            <img src="assets/menu/lentil-soup.webp" alt="Lentil soup served with lemon and toasted bread" width="3840" height="2160" loading="lazy">
+            <span>Lentil Soup <small>Restaurant listing photo</small></span>
+          </button>
+          <button class="gallery-item" type="button" data-full="assets/cuisine-drinks-official-3840.webp" data-caption="V Cola drinks — official product photography">
+            <img src="assets/cuisine-drinks-official-3840.webp" alt="Official V and V7 product photos for Cola, Diet Cola, Blueberry, Pink Lemonade, Lemon, and Pomegranate" width="3840" height="2160" loading="lazy">
+            <span>V Cola drinks <small>Official product photos</small></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact" aria-labelledby="contactTitle">
+      <div class="shell contact-grid">
+        <div class="contact-heading">
+          <p class="eyebrow eyebrow-light">Find your way to the Khan</p>
+          <h2 id="contactTitle">Your table<br><em>is in New Cairo.</em></h2>
+          <a class="button button-cream" href="https://www.google.com/maps/search/?api=1&amp;query=Khan+Al+Harir+Restaurant+Mall+24+Banafseg+New+Cairo" target="_blank" rel="noopener noreferrer">
+            Open in Google Maps
+            <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8"/></svg>
+          </a>
+        </div>
+        <address class="contact-details">
+          <div>
+            <span>Branch</span>
+            <strong>Banafseg, First Settlement</strong>
+            <p>Mall 24, Banafseg Service Area,<br>Villa 10, Dr. Ahmed Okasha Street,<br>New Cairo, Egypt</p>
+          </div>
+          <div>
+            <span>Delivery hotline</span>
+            <a href="tel:19443">19443</a>
+          </div>
+          <div>
+            <span>Branch phone</span>
+            <a href="tel:+201050714404" dir="ltr">+20 105 071 4404</a>
+          </div>
+          <p class="contact-note">Contact and address details are shown as published in the restaurant directory listing. Opening hours are not displayed because they could not be verified.</p>
+        </address>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-top">
+      <a class="footer-brand" href="#home" aria-label="Back to top">
+        <img src="assets/khan-logo.webp" alt="" width="72" height="72" loading="lazy">
+        <span><strong>Khan Al Harir</strong><span lang="ar" dir="rtl">خان الحرير</span></span>
+      </a>
+      <nav aria-label="Footer navigation">
+        <a href="#menu">Menu</a><a href="#about">About</a><a href="#gallery">Gallery</a><a href="#contact">Contact</a>
+      </nav>
+      <a class="text-link text-link-light external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">Order on Talabat <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="shell footer-bottom">
+      <p>© <span id="year"></span> Khan Al Harir. Menu selection and branch details are based on published restaurant listings.</p>
+      <p>Prices and availability may change. Confirm the latest details on Talabat.</p>
+    </div>
+  </footer>
+
+  <a class="floating-order external-order" href="https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875" target="_blank" rel="noopener noreferrer">
+    Order on Talabat <span aria-hidden="true">↗</span>
+  </a>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Food photo viewer">
+    <div class="lightbox-frame">
+      <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close photo viewer">×</button>
+      <img id="lightboxImage" src="assets/hero-shawarma.webp" alt="">
+      <div class="lightbox-bar">
+        <p id="lightboxCaption"></p>
+        <div>
+          <button id="lightboxPrev" type="button" aria-label="Previous photo">←</button>
+          <button id="lightboxNext" type="button" aria-label="Next photo">→</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
