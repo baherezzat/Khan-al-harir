@@ -642,8 +642,8 @@ function formatPrice(item) {
   }
   return typeof details.price === "number" && Number.isFinite(details.price)
     ? currentLanguage === "ar"
-      ? `${new Intl.NumberFormat("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} ج.م`
-      : `${new Intl.NumberFormat("en-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} EGP`
+      ? `${new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 2 }).format(details.price)} ج.م`
+      : `${new Intl.NumberFormat("en-EG", { maximumFractionDigits: 2 }).format(details.price)} EGP`
     : currentLanguage === "ar" ? "السعر غير متاح حاليًا" : "Price currently unavailable";
 }
 
