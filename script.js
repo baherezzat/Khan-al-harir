@@ -313,12 +313,12 @@ const attributeTextAr = new Map(Object.entries({
 }));
 
 const galleryCaptionsAr = new Map(Object.entries({
-  "Friends Tray — restaurant listing photography": "صينية الأصدقاء — صورة من قائمة المطعم",
+  "Friends Tray — generated 4K food photography": "صينية الأصدقاء — صورة طعام مولّدة بدقة 4K",
   "Shawarma Saj — generated 4K food photography": "شاورما صاج — صورة طعام مولّدة بدقة 4K",
   "Hummus and pita — illustrative photography": "حمص وخبز — صورة توضيحية",
   "Charcoal Chicken — generated 4K food photography": "فراخ على الفحم — صورة طعام مولّدة بدقة 4K",
   "Kunafa — original illustrative photography": "كنافة — صورة توضيحية أصلية",
-  "Lentil Soup — restaurant listing photography": "شوربة عدس — صورة من قائمة المطعم",
+  "Lentil Soup — generated 4K food photography": "شوربة عدس — صورة طعام مولّدة بدقة 4K",
   "Cold drinks — menu lineup visual": "مشروبات باردة — صورة تشكيلة المنيو",
   "V Cola drinks — official product photography": "مشروبات ڤي كولا — صور المنتجات الرسمية"
 }));
