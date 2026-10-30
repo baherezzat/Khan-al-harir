@@ -371,9 +371,29 @@ function productPriceRange(product) {
   return prices.length ? { min: Math.min(...prices), max: Math.max(...prices) } : null;
 }
 
+function productPriceOptions(product) {
+  const seen = new Set();
+  return (product.attributes || [])
+    .filter(attribute => Number(attribute.override_price) === 1)
+    .flatMap(attribute => attribute.values || [])
+    .map(value => ({
+      label: value.title?.en || value.title?.ar || "Option",
+      labelAr: value.title?.ar || value.title?.en || "اختيار",
+      price: asPrice(value.price)
+    }))
+    .filter(option => {
+      if (!Number.isFinite(option.price)) return false;
+      const key = `${option.label}|${option.labelAr}|${option.price}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 function productToMenuItem(product, category) {
   const range = productPriceRange(product);
   const basePrice = asPrice(product.discounted_price) ?? asPrice(product.price);
+  const priceOptions = productPriceOptions(product);
   return {
     id: `official-${product.id}`,
     name: product.title?.en || product.title?.ar || "Menu item",
@@ -385,6 +405,7 @@ function productToMenuItem(product, category) {
     oldPrice: asPrice(product.discounted_price) !== null ? asPrice(product.price) : null,
     priceMin: range?.min ?? basePrice,
     priceMax: range?.max ?? basePrice,
+    priceOptions,
     priceStatus: Number.isFinite(basePrice) ? "verified" : "unverified",
     image: product.images?.[0]?.image || category.image || "assets/image-fallback.svg",
     illustrative: false,
@@ -600,6 +621,17 @@ function formatPrice(item) {
   const details = priceDetails(item);
   if (details.status === "variable") {
     return currentLanguage === "ar" ? "السعر حسب الاختيار" : "Price varies by selection";
+  }
+  if (Array.isArray(item.priceOptions) && item.priceOptions.length > 1) {
+    const locale = currentLanguage === "ar" ? "ar-EG" : "en-EG";
+    const formatter = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+    return item.priceOptions.map(option => {
+      const label = currentLanguage === "ar" ? option.labelAr : option.label;
+      const price = currentLanguage === "ar"
+        ? `${formatter.format(option.price)} ج.م`
+        : `${formatter.format(option.price)} EGP`;
+      return `${label}: ${price}`;
+    }).join(" · ");
   }
   if (Number.isFinite(item.priceMin) && Number.isFinite(item.priceMax) && item.priceMin !== item.priceMax) {
     const locale = currentLanguage === "ar" ? "ar-EG" : "en-EG";
