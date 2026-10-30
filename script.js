@@ -239,7 +239,7 @@ const staticTextAr = new Map(Object.entries({
   "The menu": "المنيو",
   "Come hungry.": "تعال جائعًا.",
   "Leave happy.": "وارحل سعيدًا.",
-  "Explore the restaurant’s published selection, from quick sandwiches to generous family trays.": "اكتشف تشكيلة المطعم المنشورة، من السندوتشات السريعة إلى صواني العائلة السخية.",
+  "Explore only the current dishes, categories, and EGP prices published on Khan Al Harir’s official QR menu.": "تصفّح فقط الأطباق والأقسام والأسعار الحالية بالجنيه المصري المنشورة في منيو QR الرسمي لخان الحرير.",
   "Clear": "مسح",
   "No dishes found": "لم نعثر على أطباق",
   "Try another search or browse the full menu.": "جرّب بحثًا آخر أو تصفّح المنيو كاملًا.",
@@ -289,8 +289,8 @@ const staticTextAr = new Map(Object.entries({
   "Delivery hotline": "الخط الساخن للتوصيل",
   "Branch phone": "هاتف الفرع",
   "Contact and address details are shown as published in the restaurant directory listing. Opening hours are not displayed because they could not be verified.": "تُعرض بيانات التواصل والعنوان كما نُشرت في دليل المطعم. لا تُعرض مواعيد العمل لعدم التمكن من التحقق منها.",
-  "Khan Al Harir. Menu selection and branch details are based on published restaurant listings.": "خان الحرير. تستند تشكيلة المنيو وبيانات الفرع إلى قوائم المطعم المنشورة.",
-  "Prices and availability load from the restaurant’s official QR menu and may change.": "تُحمّل الأسعار والتوافر من منيو QR الرسمي للمطعم وقد تتغير."
+  "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
+  "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي."
 }));
 
 const attributeTextAr = new Map(Object.entries({

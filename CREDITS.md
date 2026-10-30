@@ -9,8 +9,9 @@ All displayed raster photography is exported as 3840 × 2160 WebP for consistent
 - Shawarma, charcoal grills, mezze, and Syrian kitchen visuals: original AI-generated 4K website photography created for this website.
 - Dasani Egypt product photo: Carrefour Egypt product listing, https://www.carrefouregypt.com/mafegy/en/still-water/dasani-natural-water-600m/p/104951. The 4K menu-card composition is original to this website.
 - Ayran product photo: official Yayla product photography, https://www.yayla.de/produkte. The 4K menu-card composition is original to this website.
-- V Cola, Diet Cola, Blueberry, Pink Lemonade, Lemon, and Pomegranate product cutouts: official V7 product photography retrieved from https://v7-benefits.com/ after confirming the flavors against Khan Al Harir's published Talabat menu. The 4K lineup composition is original to this website.
+- V Cola, Diet Cola, Blueberry, Pink Lemonade, Lemon, and Pomegranate product cutouts: official V7 product photography retrieved from https://v7-benefits.com/. The 4K lineup composition is original to this website.
 - Image fallback: original illustration created for this website.
 - Typography: Fraunces, Manrope, Noto Kufi Arabic, and Noto Naskh Arabic via Google Fonts (SIL Open Font License).
 
-Current Talabat prices and availability were not accessible during production. Numeric prices are therefore intentionally omitted; visitors are directed to the selected Banafseg branch on Talabat for live details.
+Current menu items, categories, EGP prices, and availability are loaded only from Khan Al Harir's official QR menu at https://qr.iconapp.site/IS.ZCTpt. If that source does not return an item or price, the website does not invent or substitute one.
+
