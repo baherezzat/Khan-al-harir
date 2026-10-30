@@ -432,7 +432,7 @@ h2 em, h1 em { font-weight: 400; }
 .menu-card-arabic:empty { display: none; }
 .menu-card-description { margin-top: 12px; color: var(--text-soft); font-size: 14px; line-height: 1.6; }
 .menu-card-footer { display: grid; gap: 12px; margin-top: auto; padding-top: 22px; }
-.menu-card-price { color: var(--p-green-deep); font-size: 12px; font-weight: 700; line-height: 1.7; }
+.menu-card-price { color: var(--p-green-deep); font-size: clamp(15px, 1.25vw, 17px); font-weight: 800; line-height: 1.65; }
 .menu-card-price[data-price-status="variable"] { color: var(--p-orange-dark); }
 .menu-card-price[data-price-status="unverified"] { color: var(--text-soft); }
 .menu-card-order {
