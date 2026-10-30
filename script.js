@@ -1,30 +1,39 @@
 "use strict";
 
 /*
-  KHAN AL HARIR — EDITABLE MENU DATA
-  ----------------------------------
-  Add, remove, or edit dishes in menuItems below. Set price to a number only
-  after verifying it for the Banafseg Talabat branch; null shows the safe
-  "View price on Talabat" fallback. Set illustrative: true for non-listing art.
+  KHAN AL HARIR — LIVE TALABAT MENU
+  ---------------------------------
+  The rendered menu comes from online-menu.js, which keeps the current English
+  and Arabic names, descriptions, prices, images, and price status together.
+  The legacy list below is retained only as a local photography reference.
 */
-const TALABAT_URL = "https://www.talabat.com/egypt/restaurant/737605/khan-al-harir-tagammoa-5--banafseg-9101112?aid=7875";
+const TALABAT_URL = "https://www.talabat.com/egypt/restaurant/728972/khan-al-hareer-tagammoa-5--banafseg-9101112?aid=7845";
 const PAGE_SIZE = 12;
 
 const menuCategories = [
   { id: "offers", label: "Offers", ar: "العروض" },
-  { id: "shawarma", label: "Shawarma", ar: "الشاورما" },
+  { id: "shawarma-sandwiches", label: "Shawarma sandwiches", ar: "ساندوتش شاورما" },
+  { id: "shawarma-meals", label: "Shawarma meals", ar: "وجبات شاورما" },
+  { id: "western-meals", label: "Western meals", ar: "وجبات الغربي" },
+  { id: "western-sandwiches", label: "Western sandwiches", ar: "ساندوتش غربي" },
+  { id: "burgers", label: "Burgers", ar: "برجر" },
+  { id: "broasted", label: "Broasted chicken", ar: "دجاج بروستد" },
+  { id: "shawaya", label: "Shawaya chicken", ar: "دجاج شواية" },
+  { id: "charcoal-chicken", label: "Charcoal-grilled chicken", ar: "فراخ مشوية على الفحم" },
+  { id: "casseroles", label: "Casseroles", ar: "طواجن" },
+  { id: "meat-grills", label: "Meat grills", ar: "مشويات اللحوم" },
+  { id: "grilled-sandwiches", label: "Grilled sandwiches", ar: "ساندوتش مشاوي" },
+  { id: "grilled-meals", label: "Grilled meals", ar: "وجبات مشاوي" },
+  { id: "trays", label: "Trays", ar: "صواني" },
+  { id: "addons", label: "Add-ons", ar: "إضافات" },
+  { id: "pies", label: "Pies", ar: "فطائر" },
   { id: "appetizers", label: "Appetizers", ar: "المقبلات" },
-  { id: "sides", label: "Sides & bread", ar: "الإضافات والخبز" },
   { id: "soups", label: "Soups", ar: "الشوربات" },
-  { id: "salads", label: "Salads", ar: "السلطات" },
-  { id: "grills", label: "Grills & trays", ar: "المشاوي والصواني" },
-  { id: "sandwiches", label: "Sandwiches & burgers", ar: "السندوتشات والبرجر" },
-  { id: "chicken", label: "Chicken & broasted", ar: "الفراخ والبروستد" },
   { id: "desserts", label: "Desserts", ar: "الحلويات" },
   { id: "drinks", label: "Cold drinks", ar: "المشروبات الباردة" }
 ];
 
-const menuItems = [
+const legacyMenuItems = [
   // Offers
   { id: "offer-arabi", name: "Arabi Offer", arabic: "عرض عربي", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-arabi.webp" },
   { id: "offer-maria", name: "Maria Offer", arabic: "عرض ماريا", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-maria.webp" },
@@ -190,6 +199,8 @@ const menuItems = [
   { id: "v-cola-pomegranate", name: "V Cola Pomegranate", arabic: "ڤي كولا رمان", category: "drinks", description: "Pomegranate V Cola from the published drinks list.", price: null, image: "assets/v7-card-official-pomegranate-3840.webp", official: true }
 ];
 
+const menuItems = Array.isArray(window.KHAN_ONLINE_MENU) ? window.KHAN_ONLINE_MENU : legacyMenuItems;
+
 const categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
 const categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
 
@@ -230,7 +241,7 @@ const staticTextAr = new Map(Object.entries({
   "Come hungry.": "تعال جائعًا.",
   "Leave happy.": "وارحل سعيدًا.",
   "Explore the restaurant’s published selection, from quick sandwiches to generous family trays.": "اكتشف تشكيلة المطعم المنشورة، من السندوتشات السريعة إلى صواني العائلة السخية.",
-  "Live prices and availability are confirmed on the Banafseg branch’s Talabat page. Some soup and dessert images are illustrative.": "تأكد من الأسعار والتوافر مباشرة من صفحة فرع البنفسج على طلبات. بعض صور الشوربات والحلويات توضيحية.",
+  "All 210 current menu items and prices were imported from the Banafseg 1,2,3,4 Talabat menu on 30 October 2026. Option-based prices are clearly marked.": "تم استيراد جميع أصناف المنيو الحالية وعددها ٢١٠ مع الأسعار من قائمة طلبات لفرع البنفسج ١،٢،٣،٤ بتاريخ ٣٠ أكتوبر ٢٠٢٦. الأسعار حسب الاختيار مميزة بوضوح.",
   "Clear": "مسح",
   "No dishes found": "لم نعثر على أطباق",
   "Try another search or browse the full menu.": "جرّب بحثًا آخر أو تصفّح المنيو كاملًا.",
@@ -313,15 +324,24 @@ const galleryCaptionsAr = new Map(Object.entries({
 }));
 
 const arabicMenuDescriptions = {
-  offers: "عرض منشور؛ راجع طلبات لمعرفة التفاصيل الحالية.",
-  shawarma: "من تشكيلة الشاورما المنشورة لدى المطعم.",
+  offers: "من العروض الحالية المنشورة على طلبات.",
+  "shawarma-sandwiches": "من تشكيلة ساندوتشات الشاورما الحالية.",
+  "shawarma-meals": "من تشكيلة وجبات الشاورما الحالية.",
+  "western-meals": "من تشكيلة الوجبات الغربية الحالية.",
+  "western-sandwiches": "من تشكيلة الساندوتشات الغربية الحالية.",
+  burgers: "من تشكيلة البرجر الحالية.",
+  broasted: "من تشكيلة الدجاج البروستد الحالية.",
+  shawaya: "من تشكيلة دجاج الشواية الحالية.",
+  "charcoal-chicken": "من تشكيلة الدجاج المشوي على الفحم الحالية.",
+  casseroles: "من تشكيلة الطواجن الحالية.",
+  "meat-grills": "من تشكيلة مشويات اللحوم الحالية.",
+  "grilled-sandwiches": "من تشكيلة ساندوتشات المشاوي الحالية.",
+  "grilled-meals": "من تشكيلة وجبات المشاوي الحالية.",
+  trays: "من تشكيلة الصواني الحالية.",
+  addons: "من قائمة الإضافات الحالية.",
+  pies: "من تشكيلة الفطائر الحالية.",
   appetizers: "من تشكيلة المقبلات المنشورة لدى المطعم.",
-  sides: "من تشكيلة الإضافات والخبز المنشورة لدى المطعم.",
   soups: "من تشكيلة الشوربات المنشورة لدى المطعم.",
-  salads: "من تشكيلة السلطات المنشورة لدى المطعم.",
-  grills: "من تشكيلة المشاوي والصواني المنشورة لدى المطعم.",
-  sandwiches: "من تشكيلة السندوتشات المنشورة لدى المطعم.",
-  chicken: "من تشكيلة الفراخ والبروستد المنشورة لدى المطعم.",
   desserts: "من قائمة الحلويات المنشورة لدى المطعم.",
   drinks: "من قائمة المشروبات الباردة المنشورة لدى المطعم."
 };
@@ -443,17 +463,25 @@ function filteredItems() {
     const inCategory = state.category === "all" || item.category === state.category;
     if (!inCategory) return false;
     if (!query) return true;
-    const searchable = normalizeText(`${item.name} ${item.arabic} ${item.description} ${arabicMenuDescriptions[item.category]} ${categoryLabels[item.category]} ${categoryLabelsAr[item.category]}`);
+    const searchable = normalizeText(`${item.name} ${item.arabic} ${item.description} ${item.descriptionAr} ${arabicMenuDescriptions[item.category]} ${categoryLabels[item.category]} ${categoryLabelsAr[item.category]}`);
     return searchable.includes(query);
   });
 }
 
-function formatPrice(price) {
-  return typeof price === "number" && Number.isFinite(price)
+function priceDetails(item) {
+  return { price: item.price, status: item.priceStatus || (Number.isFinite(item.price) ? "verified" : "unverified") };
+}
+
+function formatPrice(item) {
+  const details = priceDetails(item);
+  if (details.status === "variable") {
+    return currentLanguage === "ar" ? "السعر حسب الاختيار على طلبات" : "Price varies by selection on Talabat";
+  }
+  return typeof details.price === "number" && Number.isFinite(details.price)
     ? currentLanguage === "ar"
-      ? `${new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 2 }).format(price)} ج.م`
-      : `${new Intl.NumberFormat("en-EG", { maximumFractionDigits: 2 }).format(price)} EGP`
-    : currentLanguage === "ar" ? "اعرض السعر على طلبات" : "View price on Talabat";
+      ? `${new Intl.NumberFormat("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} ج.م`
+      : `${new Intl.NumberFormat("en-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} EGP`
+    : currentLanguage === "ar" ? "السعر غير مؤكد — راجع طلبات" : "Price unverified — check Talabat";
 }
 
 function menuCard(item) {
@@ -462,7 +490,7 @@ function menuCard(item) {
     ? (item.official ? "صورة المنتج الرسمية" : item.illustrative ? "صورة توضيحية" : "صورة من قائمة المطعم")
     : (item.official ? "Official product image" : item.illustrative ? "Illustrative image" : "Restaurant listing photo");
   const displayName = isArabic ? item.arabic : item.name;
-  const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : item.description;
+  const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
   const orderLabel = isArabic ? `اطلب ${item.arabic} من طلبات (يفتح في علامة تبويب جديدة)` : `Order ${item.name} on Talabat (opens in a new tab)`;
   return `
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}">
@@ -480,7 +508,7 @@ function menuCard(item) {
         </div>
         <p class="menu-card-description">${escapeHTML(description)}</p>
         <div class="menu-card-footer">
-          <p class="menu-card-price">${formatPrice(item.price)}</p>
+          <p class="menu-card-price" data-price-status="${escapeHTML(priceDetails(item).status)}">${formatPrice(item)}</p>
           <a class="menu-card-order external-order" href="${TALABAT_URL}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHTML(orderLabel)}">
             <span>${isArabic ? "اطلب من طلبات" : "Order on Talabat"}</span><span aria-hidden="true">↗</span>
           </a>
