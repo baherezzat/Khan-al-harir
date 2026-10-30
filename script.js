@@ -271,6 +271,7 @@ const staticTextAr = new Map(Object.entries({
   "Lentil Soup": "شوربة عدس",
   "Cold drinks": "مشروبات باردة",
   "Restaurant listing photo": "صورة من قائمة المطعم",
+  "Generated 4K photo": "صورة مولّدة بدقة 4K",
   "Illustrative photo": "صورة توضيحية",
   "Illustrative artwork": "رسم توضيحي",
   "Menu lineup visual": "صورة تشكيلة المنيو",
@@ -313,9 +314,9 @@ const attributeTextAr = new Map(Object.entries({
 
 const galleryCaptionsAr = new Map(Object.entries({
   "Friends Tray — restaurant listing photography": "صينية الأصدقاء — صورة من قائمة المطعم",
-  "Shawarma Saj — restaurant listing photography": "شاورما صاج — صورة من قائمة المطعم",
+  "Shawarma Saj — generated 4K food photography": "شاورما صاج — صورة طعام مولّدة بدقة 4K",
   "Hummus and pita — illustrative photography": "حمص وخبز — صورة توضيحية",
-  "Charcoal Chicken — restaurant listing photography": "فراخ على الفحم — صورة من قائمة المطعم",
+  "Charcoal Chicken — generated 4K food photography": "فراخ على الفحم — صورة طعام مولّدة بدقة 4K",
   "Kunafa — original illustrative photography": "كنافة — صورة توضيحية أصلية",
   "Lentil Soup — restaurant listing photography": "شوربة عدس — صورة من قائمة المطعم",
   "Cold drinks — menu lineup visual": "مشروبات باردة — صورة تشكيلة المنيو",
