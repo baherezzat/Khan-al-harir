@@ -239,7 +239,7 @@ const staticTextAr = new Map(Object.entries({
   "The menu": "المنيو",
   "Come hungry.": "تعال جائعًا.",
   "Leave happy.": "وارحل سعيدًا.",
-  "Explore only the current dishes, categories, and EGP prices published on Khan Al Harir’s official QR menu.": "تصفّح فقط الأطباق والأقسام والأسعار الحالية بالجنيه المصري المنشورة في منيو QR الرسمي لخان الحرير.",
+  "A love letter to Halaby food—charcoal grills, fragrant spices, warm bread, generous mezze, and recipes made to bring people together.": "رسالة حب إلى المطبخ الحلبي؛ مشاوي على الفحم، وتوابل عطرة، وخبز دافئ، ومقبلات سخية، ووصفات تجمع الأحبة حول السفرة.",
   "Clear": "مسح",
   "No dishes found": "لم نعثر على أطباق",
   "Try another search or browse the full menu.": "جرّب بحثًا آخر أو تصفّح المنيو كاملًا.",
