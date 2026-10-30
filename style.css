@@ -455,7 +455,7 @@ h2 em, h1 em { font-weight: 400; }
 .empty-state h3 { margin-top: 8px; font-family: var(--serif); font-size: 36px; font-weight: 400; }
 .empty-state p { margin: 8px 0 24px; color: var(--text-soft); }
 
-/* Talabat call to action */
+/* Menu call to action */
 .order-section { position: relative; overflow: hidden; padding-block: 84px; background: var(--p-green-deep); color: var(--p-cream); }
 .order-pattern { color: var(--p-cream); opacity: .055; mask-image: linear-gradient(90deg, currentColor, transparent); }
 .order-inner { position: relative; display: grid; gap: 42px; }
@@ -730,3 +730,4 @@ html[dir="rtl"] .lightbox-close { right: auto; left: 10px; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
   .reveal-prep { opacity: 1; transform: none; }
 }
+

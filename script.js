@@ -1,16 +1,14 @@
 "use strict";
 
 /*
-  KHAN AL HARIR — LIVE TALABAT MENU
-  ---------------------------------
-  The rendered menu comes from online-menu.js, which keeps the current English
-  and Arabic names, descriptions, prices, images, and price status together.
-  The legacy list below is retained only as a local photography reference.
+  KHAN AL HARIR — OFFICIAL QR MENU
+  --------------------------------
+  Current categories, dishes, images, and EGP prices load from the restaurant's
+  public QR menu. The legacy list below is retained only as a photography reference.
 */
-const TALABAT_URL = "https://www.talabat.com/egypt/restaurant/728972/khan-al-hareer-tagammoa-5--banafseg-9101112?aid=7845";
 const PAGE_SIZE = 12;
 
-const menuCategories = [
+let menuCategories = [
   { id: "offers", label: "Offers", ar: "العروض" },
   { id: "shawarma-sandwiches", label: "Shawarma sandwiches", ar: "ساندوتش شاورما" },
   { id: "shawarma-meals", label: "Shawarma meals", ar: "وجبات شاورما" },
@@ -35,14 +33,14 @@ const menuCategories = [
 
 const legacyMenuItems = [
   // Offers
-  { id: "offer-arabi", name: "Arabi Offer", arabic: "عرض عربي", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-arabi.webp" },
-  { id: "offer-maria", name: "Maria Offer", arabic: "عرض ماريا", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-maria.webp" },
-  { id: "offer-fatta", name: "Fatta Offer", arabic: "عرض فتة", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-fatta.webp" },
-  { id: "offer-burgers", name: "Burger Offer", arabic: "عرض برجر", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-burgers.webp" },
-  { id: "offer-family", name: "Family Offer", arabic: "عرض عائلي", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-family.webp" },
-  { id: "offer-khan-box", name: "Khan Box Offer", arabic: "عرض خان بوكس", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-khan-box.webp" },
-  { id: "offer-broast-leg", name: "Broasted Leg Offer", arabic: "عرض بروستد أوراك", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-broast-leg.webp" },
-  { id: "offer-broast-breast", name: "Broasted Breast Offer", arabic: "عرض بروستد صدور", category: "offers", description: "A published offer; see Talabat for current inclusions.", price: null, image: "assets/menu/offer-broast-breast.webp" },
+  { id: "offer-arabi", name: "Arabi Offer", arabic: "عرض عربي", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-arabi.webp" },
+  { id: "offer-maria", name: "Maria Offer", arabic: "عرض ماريا", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-maria.webp" },
+  { id: "offer-fatta", name: "Fatta Offer", arabic: "عرض فتة", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-fatta.webp" },
+  { id: "offer-burgers", name: "Burger Offer", arabic: "عرض برجر", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-burgers.webp" },
+  { id: "offer-family", name: "Family Offer", arabic: "عرض عائلي", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-family.webp" },
+  { id: "offer-khan-box", name: "Khan Box Offer", arabic: "عرض خان بوكس", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-khan-box.webp" },
+  { id: "offer-broast-leg", name: "Broasted Leg Offer", arabic: "عرض بروستد أوراك", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-broast-leg.webp" },
+  { id: "offer-broast-breast", name: "Broasted Breast Offer", arabic: "عرض بروستد صدور", category: "offers", description: "A published restaurant offer.", price: null, image: "assets/menu/offer-broast-breast.webp" },
 
   // Shawarma
   { id: "shawarma-arabi", name: "Shawarma Arabi", arabic: "شاورما عربي", category: "shawarma", description: "Shawarma Arabi from the published restaurant menu.", price: null, image: "assets/menu/shawarma-arabi.webp" },
@@ -133,10 +131,10 @@ const legacyMenuItems = [
   { id: "mixed-grill", name: "Mixed Grill", arabic: "مشاوي مشكلة", category: "grills", description: "Mixed grill from the published grill selection.", price: null, image: "assets/menu/mixed-grill.webp" },
   { id: "kofta-meal", name: "Kofta Meal", arabic: "وجبة كفتة", category: "grills", description: "A kofta meal from the published restaurant menu.", price: null, image: "assets/menu/kofta-meal.webp" },
   { id: "kebab-meal", name: "Kebab Meal", arabic: "وجبة كباب", category: "grills", description: "A kebab meal from the published restaurant menu.", price: null, image: "assets/menu/kebab-meal.webp" },
-  { id: "kebab-meal-2", name: "Kebab Meal 2", arabic: "وجبة كباب 2", category: "grills", description: "A published kebab meal selection; see Talabat for details.", price: null, image: "assets/menu/kebab-meal-2.webp" },
+  { id: "kebab-meal-2", name: "Kebab Meal 2", arabic: "وجبة كباب 2", category: "grills", description: "A published kebab meal selection.", price: null, image: "assets/menu/kebab-meal-2.webp" },
   { id: "shish-kofta-meal", name: "Shish and Kofta Meal", arabic: "وجبة شيش وكفتة", category: "grills", description: "A shish and kofta meal from the published menu.", price: null, image: "assets/menu/shish-kofta-meal.webp" },
-  { id: "mixed-grill-meal-3", name: "Mixed Grill Meal 3", arabic: "وجبة مشاوي مشكلة 3", category: "grills", description: "A published mixed-grill meal; see Talabat for details.", price: null, image: "assets/menu/mixed-grill-meal-3.webp" },
-  { id: "mixed-grill-meal-4", name: "Mixed Grill Meal 4", arabic: "وجبة مشاوي مشكلة 4", category: "grills", description: "A published mixed-grill meal; see Talabat for details.", price: null, image: "assets/menu/mixed-grill-meal-4.webp" },
+  { id: "mixed-grill-meal-3", name: "Mixed Grill Meal 3", arabic: "وجبة مشاوي مشكلة 3", category: "grills", description: "A published mixed-grill meal.", price: null, image: "assets/menu/mixed-grill-meal-3.webp" },
+  { id: "mixed-grill-meal-4", name: "Mixed Grill Meal 4", arabic: "وجبة مشاوي مشكلة 4", category: "grills", description: "A published mixed-grill meal.", price: null, image: "assets/menu/mixed-grill-meal-4.webp" },
   { id: "friends-tray", name: "Friends Tray", arabic: "صينية الأصدقاء", category: "grills", description: "Friends Tray from the published family-tray selection.", price: null, image: "assets/menu/friends-tray.webp" },
   { id: "khan-tray", name: "Khan Tray", arabic: "صينية خان", category: "grills", description: "Khan Tray from the published family-tray selection.", price: null, image: "assets/menu/khan-tray.webp" },
   { id: "mansaf-leg", name: "Mansaf Leg", arabic: "منسف فخذة", category: "grills", description: "Mansaf leg from the published family-tray selection.", price: null, image: "assets/menu/mansaf-leg.webp" },
@@ -199,10 +197,12 @@ const legacyMenuItems = [
   { id: "v-cola-pomegranate", name: "V Cola Pomegranate", arabic: "ڤي كولا رمان", category: "drinks", description: "Pomegranate V Cola from the published drinks list.", price: null, image: "assets/v7-card-official-pomegranate-3840.webp", official: true }
 ];
 
-const menuItems = Array.isArray(window.KHAN_ONLINE_MENU) ? window.KHAN_ONLINE_MENU : legacyMenuItems;
+const menuSource = window.KHAN_MENU_SOURCE || {};
+menuCategories = [];
+let menuItems = [];
 
-const categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
-const categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
+let categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
+let categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
 
 const staticTextAr = new Map(Object.entries({
   "Skip to main content": "انتقل إلى المحتوى الرئيسي",
@@ -210,18 +210,17 @@ const staticTextAr = new Map(Object.entries({
   "About": "عن المطعم",
   "Gallery": "الصور",
   "Contact": "تواصل معنا",
-  "Order on Talabat": "اطلب من طلبات",
+  "View the menu": "شاهد المنيو",
   "Explore the dishes": "اكتشف أطباقنا",
   "Our table in New Cairo": "سفرتنا في القاهرة الجديدة",
   "A feast for the eyes": "وليمة تسرّ العين",
   "Find the Banafseg branch": "اعثر على فرع البنفسج",
   "Syrian & Middle Eastern cuisine": "مطبخ سوري وشرق أوسطي",
   "New Cairo": "القاهرة الجديدة",
-  "Authentic Syrian": "نكهات سورية أصيلة",
-  "flavors,": "بطابع شامي،",
+  "Authentic Halaby": "نكهات أصيلة",
+  "flavors,": "بطابع حلبي،",
   "made with love.": "محضّرة بحب.",
   "From shawarma and charcoal grills to mezze and kunafa—there is always room for one more at the table.": "من الشاورما والمشاوي على الفحم إلى المقبلات والكنافة—دائمًا هناك مكان لشخص آخر على السفرة.",
-  "View the menu": "شاهد المنيو",
   "Illustrative photography": "صور توضيحية",
   "The house favorite": "المفضلة في المطعم",
   "Shawarma": "شاورما",
@@ -241,25 +240,25 @@ const staticTextAr = new Map(Object.entries({
   "Come hungry.": "تعال جائعًا.",
   "Leave happy.": "وارحل سعيدًا.",
   "Explore the restaurant’s published selection, from quick sandwiches to generous family trays.": "اكتشف تشكيلة المطعم المنشورة، من السندوتشات السريعة إلى صواني العائلة السخية.",
-  "All 210 current menu items and prices were imported from the Banafseg 1,2,3,4 Talabat menu on 30 October 2026. Option-based prices are clearly marked.": "تم استيراد جميع أصناف المنيو الحالية وعددها ٢١٠ مع الأسعار من قائمة طلبات لفرع البنفسج ١،٢،٣،٤ بتاريخ ٣٠ أكتوبر ٢٠٢٦. الأسعار حسب الاختيار مميزة بوضوح.",
   "Clear": "مسح",
   "No dishes found": "لم نعثر على أطباق",
   "Try another search or browse the full menu.": "جرّب بحثًا آخر أو تصفّح المنيو كاملًا.",
   "Reset filters": "إعادة ضبط الفلاتر",
   "Show more dishes": "عرض أطباق أخرى",
-  "See the live menu on Talabat": "شاهد المنيو المباشر على طلبات",
+  "View the official QR menu": "شاهد منيو QR الرسمي",
   "Search the menu": "ابحث في المنيو",
-  "Your next meal is a few taps away": "وجبتك القادمة على بُعد ضغطات قليلة",
-  "Hungry?": "جائع؟",
-  "Order your favorites on Talabat.": "اطلب أطباقك المفضلة من طلبات.",
-  "Check the live menu, delivery availability, and today’s prices directly with the restaurant’s selected branch.": "راجع المنيو المباشر وتوافر التوصيل وأسعار اليوم مباشرة لدى فرع المطعم المحدد.",
-  "Order now on": "اطلب الآن من",
-  "Ordering and payment are completed on Talabat.": "يتم الطلب والدفع عبر طلبات.",
+  "The current restaurant menu": "منيو المطعم الحالي",
+  "Explore.": "اكتشف.",
+  "Find your next favorite.": "اكتشف طبقك المفضل القادم.",
+  "Browse every current category, dish, and EGP price from Khan Al Harir’s official QR menu.": "تصفّح جميع الأقسام والأطباق والأسعار الحالية بالجنيه المصري من منيو QR الرسمي لخان الحرير.",
+  "View the": "شاهد",
+  "full menu": "المنيو كاملًا",
+  "Prices load directly from the restaurant’s official menu.": "تُحمّل الأسعار مباشرة من منيو المطعم الرسمي.",
   "At the table": "على السفرة",
   "A taste of Syria,": "مذاق من سوريا،",
   "at home in New Cairo.": "في قلب القاهرة الجديدة.",
   "Khan Al Harir brings the generous spirit of a Syrian table to El Tagamo3. Shawarma, charcoal-grilled meats, colorful mezze, warm bread, and sweets all invite you to slow down and share.": "يقدّم خان الحرير روح الضيافة السورية الأصيلة إلى التجمع. الشاورما والمشاوي على الفحم والمقبلات الملوّنة والخبز الدافئ والحلويات تدعوك للتمهّل والمشاركة.",
-  "Come for a quick sandwich, gather over a mixed grill, or send dinner home through Talabat. The menu offers both everyday favorites and generous meals for a full table.": "تعال لسندوتش سريع، أو اجتمع حول طبق مشاوي مشكلة، أو اطلب العشاء إلى بيتك عبر طلبات. يقدم المنيو اختيارات يومية محبوبة ووجبات سخية لسفرة كاملة.",
+  "Come for a quick sandwich, gather over a mixed grill, or take dinner home. The menu offers both everyday favorites and generous meals for a full table.": "تعال لسندوتش سريع، أو اجتمع حول طبق مشاوي مشكلة، أو خذ العشاء إلى بيتك. يقدم المنيو اختيارات يومية محبوبة ووجبات سخية لسفرة كاملة.",
   "Syrian & Middle Eastern restaurant": "مطعم سوري وشرق أوسطي",
   "From the kitchen": "من المطبخ",
   "A feast for the eyes.": "وليمة تسرّ العين.",
@@ -290,7 +289,7 @@ const staticTextAr = new Map(Object.entries({
   "Branch phone": "هاتف الفرع",
   "Contact and address details are shown as published in the restaurant directory listing. Opening hours are not displayed because they could not be verified.": "تُعرض بيانات التواصل والعنوان كما نُشرت في دليل المطعم. لا تُعرض مواعيد العمل لعدم التمكن من التحقق منها.",
   "Khan Al Harir. Menu selection and branch details are based on published restaurant listings.": "خان الحرير. تستند تشكيلة المنيو وبيانات الفرع إلى قوائم المطعم المنشورة.",
-  "Prices and availability may change. Confirm the latest details on Talabat.": "قد تتغير الأسعار والتوافر. تأكد من أحدث التفاصيل على طلبات."
+  "Prices and availability load from the restaurant’s official QR menu and may change.": "تُحمّل الأسعار والتوافر من منيو QR الرسمي للمطعم وقد تتغير."
 }));
 
 const attributeTextAr = new Map(Object.entries({
@@ -324,7 +323,7 @@ const galleryCaptionsAr = new Map(Object.entries({
 }));
 
 const arabicMenuDescriptions = {
-  offers: "من العروض الحالية المنشورة على طلبات.",
+  offers: "من العروض الحالية المنشورة في منيو المطعم الرسمي.",
   "shawarma-sandwiches": "من تشكيلة ساندوتشات الشاورما الحالية.",
   "shawarma-meals": "من تشكيلة وجبات الشاورما الحالية.",
   "western-meals": "من تشكيلة الوجبات الغربية الحالية.",
@@ -345,6 +344,129 @@ const arabicMenuDescriptions = {
   desserts: "من قائمة الحلويات المنشورة لدى المطعم.",
   drinks: "من قائمة المشروبات الباردة المنشورة لدى المطعم."
 };
+
+let menuLoadState = "loading";
+let failedCategoryCount = 0;
+
+function categorySlug(category) {
+  const english = category?.title?.en || `category-${category?.id || "menu"}`;
+  return english.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function asPrice(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function productPriceRange(product) {
+  const basePrice = asPrice(product.price);
+  const optionPrices = (product.attributes || [])
+    .filter(attribute => Number(attribute.override_price) === 1)
+    .flatMap(attribute => attribute.values || [])
+    .map(value => asPrice(value.price))
+    .filter(Number.isFinite);
+  const prices = [basePrice, ...optionPrices].filter(Number.isFinite);
+  return prices.length ? { min: Math.min(...prices), max: Math.max(...prices) } : null;
+}
+
+function productToMenuItem(product, category) {
+  const range = productPriceRange(product);
+  const basePrice = asPrice(product.discounted_price) ?? asPrice(product.price);
+  return {
+    id: `official-${product.id}`,
+    name: product.title?.en || product.title?.ar || "Menu item",
+    arabic: product.title?.ar || product.title?.en || "صنف من المنيو",
+    description: product.description?.en || "From Khan Al Harir's official QR menu.",
+    descriptionAr: product.description?.ar || "من منيو خان الحرير الرسمي.",
+    category: categorySlug(category),
+    price: basePrice,
+    oldPrice: asPrice(product.discounted_price) !== null ? asPrice(product.price) : null,
+    priceMin: range?.min ?? basePrice,
+    priceMax: range?.max ?? basePrice,
+    priceStatus: Number.isFinite(basePrice) ? "verified" : "unverified",
+    image: product.images?.[0]?.image || category.image || "assets/image-fallback.svg",
+    illustrative: false,
+    official: true
+  };
+}
+
+function updateMenuSourceMessage() {
+  const element = document.getElementById("menuSource");
+  if (!element) return;
+  const isArabic = currentLanguage === "ar";
+  if (menuLoadState === "loading") {
+    element.textContent = isArabic ? "جارٍ تحميل الأسعار الحالية من منيو المطعم الرسمي…" : "Loading current prices from the restaurant's official menu…";
+    return;
+  }
+  if (menuLoadState === "error") {
+    element.textContent = isArabic ? "تعذر تحميل الأسعار الحالية. الأسعار غير متاحة مؤقتًا، ولم يتم عرض أي سعر غير مؤكد." : "Current prices could not be loaded. Prices are temporarily unavailable; no unverified prices are shown.";
+    return;
+  }
+  const count = menuItems.length;
+  element.textContent = isArabic
+    ? `تم تحميل ${new Intl.NumberFormat("ar-EG").format(count)} صنفًا بأسعار الجنيه المصري من منيو خان الحرير الرسمي${failedCategoryCount ? `؛ تعذر تحميل ${new Intl.NumberFormat("ar-EG").format(failedCategoryCount)} قسم.` : "."}`
+    : `${count} current items with EGP prices loaded from Khan Al Harir's official menu${failedCategoryCount ? `; ${failedCategoryCount} categories could not be loaded.` : "."}`;
+}
+
+async function fetchJSON(url) {
+  const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
+  if (!response.ok) throw new Error(`Menu request failed (${response.status})`);
+  const payload = await response.json();
+  if (!payload?.status) throw new Error(payload?.msg || "Menu response was not successful");
+  return payload.data;
+}
+
+async function loadOfficialMenu() {
+  const { apiBase, branchId } = menuSource;
+  if (!apiBase || !branchId) {
+    menuLoadState = "error";
+    updateMenuSourceMessage();
+    renderMenu();
+    return;
+  }
+
+  try {
+    const categories = await fetchJSON(`${apiBase}/branches/${branchId}/categories`);
+    menuCategories = categories.map(category => ({
+      id: categorySlug(category),
+      label: category.title?.en || category.title?.ar || "Menu",
+      ar: category.title?.ar || category.title?.en || "المنيو",
+      sourceId: category.id,
+      source: category
+    }));
+    categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
+    categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
+
+    const loadedItems = [];
+    failedCategoryCount = 0;
+    for (let offset = 0; offset < menuCategories.length; offset += 6) {
+      const batch = menuCategories.slice(offset, offset + 6);
+      const results = await Promise.allSettled(batch.map(async category => {
+        const data = await fetchJSON(`${apiBase}/branches/${branchId}/categories/${category.sourceId}/products`);
+        return (data.products || []).map(product => productToMenuItem(product, category.source));
+      }));
+      results.forEach(result => {
+        if (result.status === "fulfilled") loadedItems.push(...result.value);
+        else failedCategoryCount += 1;
+      });
+    }
+
+    if (!loadedItems.length) throw new Error("The official menu returned no products");
+    menuItems = loadedItems;
+    menuLoadState = "loaded";
+    state.category = "all";
+    state.visible = PAGE_SIZE;
+    updateMenuSourceMessage();
+    renderMenu();
+  } catch (error) {
+    console.error("Official menu load failed", error);
+    menuItems = [];
+    menuLoadState = "error";
+    updateMenuSourceMessage();
+    renderMenu();
+  }
+}
 
 function preferredLanguage() {
   try {
@@ -398,9 +520,10 @@ function setLanguage(language, persist = true) {
   document.documentElement.dir = isArabic ? "rtl" : "ltr";
   document.title = isArabic ? "خان الحرير | مطعم سوري في القاهرة الجديدة" : "Khan Al Harir خان الحرير | Syrian Restaurant in New Cairo";
   document.querySelector('meta[name="description"]').content = isArabic
-    ? "اكتشف منيو خان الحرير السوري والشرق أوسطي في القاهرة الجديدة، واطلب من فرع البنفسج عبر طلبات."
-    : "Explore Khan Al Harir’s Syrian and Middle Eastern menu in New Cairo, then order from the Banafseg branch on Talabat.";
+    ? "اكتشف منيو خان الحرير الحلبي والسوري الحالي مع الأسعار الرسمية بالجنيه المصري في القاهرة الجديدة."
+    : "Explore Khan Al Harir’s current Halaby and Syrian menu with official EGP prices in New Cairo.";
   translateStaticContent(currentLanguage);
+  updateMenuSourceMessage();
 
   const languageToggle = document.getElementById("languageToggle");
   languageToggle.setAttribute("aria-pressed", String(isArabic));
@@ -475,13 +598,20 @@ function priceDetails(item) {
 function formatPrice(item) {
   const details = priceDetails(item);
   if (details.status === "variable") {
-    return currentLanguage === "ar" ? "السعر حسب الاختيار على طلبات" : "Price varies by selection on Talabat";
+    return currentLanguage === "ar" ? "السعر حسب الاختيار" : "Price varies by selection";
+  }
+  if (Number.isFinite(item.priceMin) && Number.isFinite(item.priceMax) && item.priceMin !== item.priceMax) {
+    const locale = currentLanguage === "ar" ? "ar-EG" : "en-EG";
+    const formatter = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+    return currentLanguage === "ar"
+      ? `${formatter.format(item.priceMin)}–${formatter.format(item.priceMax)} ج.م`
+      : `${formatter.format(item.priceMin)}–${formatter.format(item.priceMax)} EGP`;
   }
   return typeof details.price === "number" && Number.isFinite(details.price)
     ? currentLanguage === "ar"
       ? `${new Intl.NumberFormat("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} ج.م`
       : `${new Intl.NumberFormat("en-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(details.price)} EGP`
-    : currentLanguage === "ar" ? "السعر غير مؤكد — راجع طلبات" : "Price unverified — check Talabat";
+    : currentLanguage === "ar" ? "السعر غير متاح حاليًا" : "Price currently unavailable";
 }
 
 function menuCard(item) {
@@ -491,9 +621,8 @@ function menuCard(item) {
     : (item.official ? "Official product image" : item.illustrative ? "Illustrative image" : "Restaurant listing photo");
   const displayName = isArabic ? item.arabic : item.name;
   const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
-  const orderLabel = isArabic ? `اطلب ${item.arabic} من طلبات (يفتح في علامة تبويب جديدة)` : `Order ${item.name} on Talabat (opens in a new tab)`;
   return `
-    <article class="menu-card" data-item-id="${escapeHTML(item.id)}">
+    <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="-1">
       <div class="menu-card-media">
         <img src="${escapeHTML(item.image)}" alt="${escapeHTML(`${displayName} — ${imageLabel}`)}" width="3840" height="2160" loading="lazy" decoding="async">
         ${item.official
@@ -509,9 +638,6 @@ function menuCard(item) {
         <p class="menu-card-description">${escapeHTML(description)}</p>
         <div class="menu-card-footer">
           <p class="menu-card-price" data-price-status="${escapeHTML(priceDetails(item).status)}">${formatPrice(item)}</p>
-          <a class="menu-card-order external-order" href="${TALABAT_URL}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHTML(orderLabel)}">
-            <span>${isArabic ? "اطلب من طلبات" : "Order on Talabat"}</span><span aria-hidden="true">↗</span>
-          </a>
         </div>
       </div>
     </article>`;
@@ -533,7 +659,7 @@ function renderMenu() {
   const matches = filteredItems();
   const visibleItems = matches.slice(0, state.visible);
   menuGrid.innerHTML = visibleItems.map(menuCard).join("");
-  emptyState.hidden = matches.length !== 0;
+  emptyState.hidden = menuLoadState === "loading" || matches.length !== 0;
   menuGrid.hidden = matches.length === 0;
   clearSearch.hidden = state.query.length === 0;
 
@@ -597,8 +723,8 @@ showMore.addEventListener("click", () => {
   const firstNewIndex = state.visible;
   state.visible += PAGE_SIZE;
   renderMenu();
-  const firstNewLink = menuGrid.children[firstNewIndex]?.querySelector("a");
-  if (showMore.hidden && firstNewLink) firstNewLink.focus({ preventScroll: true });
+  const firstNewCard = menuGrid.children[firstNewIndex];
+  if (showMore.hidden && firstNewCard) firstNewCard.focus({ preventScroll: true });
 });
 
 document.querySelectorAll("[data-category-link]").forEach(button => {
@@ -756,3 +882,5 @@ if ("IntersectionObserver" in window && !prefersReducedMotion.matches) {
 document.getElementById("year").textContent = new Date().getFullYear();
 initializeStaticTranslations();
 setLanguage(currentLanguage, false);
+loadOfficialMenu();
+
