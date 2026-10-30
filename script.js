@@ -290,7 +290,13 @@ const staticTextAr = new Map(Object.entries({
   "Branch phone": "هاتف الفرع",
   "Contact and address details are shown as published in the restaurant directory listing. Opening hours are not displayed because they could not be verified.": "تُعرض بيانات التواصل والعنوان كما نُشرت في دليل المطعم. لا تُعرض مواعيد العمل لعدم التمكن من التحقق منها.",
   "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
-  "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي."
+  "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي.",
+  "Follow Khan Al Harir": "تابع خان الحرير",
+  "Stay close to our Halaby table, latest dishes, offers, and restaurant moments.": "خليك قريب من سفرتنا الحلبية، وأحدث الأطباق والعروض ولحظات المطعم.",
+  "Facebook": "فيسبوك",
+  "Instagram": "إنستجرام",
+  "TikTok": "تيك توك",
+  "WhatsApp": "واتساب"
 }));
 
 const attributeTextAr = new Map(Object.entries({
@@ -309,7 +315,12 @@ const attributeTextAr = new Map(Object.entries({
   "Food photo viewer": "عارض صور الطعام",
   "Close photo viewer": "إغلاق عارض الصور",
   "Previous photo": "الصورة السابقة",
-  "Next photo": "الصورة التالية"
+  "Next photo": "الصورة التالية",
+  "Khan Al Harir social media": "حسابات خان الحرير على وسائل التواصل",
+  "Open Khan Al Harir on Facebook": "افتح صفحة خان الحرير على فيسبوك",
+  "Open Khan Al Harir on Instagram": "افتح صفحة خان الحرير على إنستجرام",
+  "Open Khan Al Harir on TikTok": "افتح صفحة خان الحرير على تيك توك",
+  "Chat with Khan Al Harir on WhatsApp": "تواصل مع خان الحرير على واتساب"
 }));
 
 const galleryCaptionsAr = new Map(Object.entries({
