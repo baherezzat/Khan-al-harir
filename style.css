@@ -409,7 +409,7 @@ h2 em, h1 em { font-weight: 400; }
   background: var(--card-bg);
 }
 .menu-card-media { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: var(--p-line); }
-.menu-card-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 260ms var(--ease); }
+.menu-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 260ms var(--ease); }
 .menu-card:hover .menu-card-media img { transform: scale(1.045); }
 .image-label {
   position: absolute;

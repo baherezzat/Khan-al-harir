@@ -197,75 +197,6 @@ const legacyMenuItems = [
   { id: "v-cola-pomegranate", name: "V Cola Pomegranate", arabic: "ڤي كولا رمان", category: "drinks", description: "Pomegranate V Cola from the published drinks list.", price: null, image: "assets/v7-card-official-pomegranate-3840.webp", official: true }
 ];
 
-const categoryPhoto4K = Object.freeze({
-  offers: "assets/menu/friends-tray.webp",
-  "shawarma-sandwiches": "assets/menu/shawarma-saj-4k-generated-v2.jpg",
-  "shawarma-meals": "assets/menu/shawarma-arabi.webp",
-  "western-meals": "assets/menu/crispy.webp",
-  "western-sandwiches": "assets/menu/zinger-burger.webp",
-  burgers: "assets/menu/zinger-burger.webp",
-  broasted: "assets/menu/broasted-chicken.webp",
-  shawaya: "assets/menu/whole-roast-chicken.webp",
-  "charcoal-chicken": "assets/menu/charcoal-chicken-4k-generated-v2.jpg",
-  casseroles: "assets/menu/chicken-mansaf.webp",
-  "meat-grills": "assets/menu/mixed-grill.webp",
-  "grilled-sandwiches": "assets/menu/kofta-sandwich.webp",
-  "grilled-meals": "assets/menu/kofta-meal.webp",
-  trays: "assets/menu/friends-tray.webp",
-  addons: "assets/menu/garlic-sauce.webp",
-  pies: "assets/menu/meat-borak.webp",
-  appetizers: "assets/menu/hummus.webp",
-  soups: "assets/menu/lentil-soup.webp",
-  desserts: "assets/kunafa-illustrative.webp",
-  drinks: "assets/cuisine-drinks-official-3840.webp"
-});
-
-function normalizedDishName(value) {
-  return String(value || "")
-    .normalize("NFKD")
-    .toLowerCase()
-    .replace(/[\u064b-\u065f\u0670]/g, "")
-    .replace(/[^a-z0-9\u0600-\u06ff]+/g, " ")
-    .trim();
-}
-
-const localPhotoByDishName = new Map();
-legacyMenuItems.forEach(item => {
-  const preferredImage = item.id === "shawarma-saj"
-    ? "assets/menu/shawarma-saj-4k-generated-v2.jpg"
-    : item.id === "charcoal-chicken"
-      ? "assets/menu/charcoal-chicken-4k-generated-v2.jpg"
-      : item.image;
-  [item.name, item.arabic].forEach(name => {
-    const key = normalizedDishName(name);
-    if (key) localPhotoByDishName.set(key, preferredImage);
-  });
-});
-
-function local4KPhotoFor(product, category) {
-  const exactKeys = [product.title?.en, product.title?.ar].map(normalizedDishName).filter(Boolean);
-  for (const key of exactKeys) {
-    if (localPhotoByDishName.has(key)) {
-      return { image: localPhotoByDishName.get(key), representative: false };
-    }
-  }
-
-  for (const key of exactKeys) {
-    if (key.length < 5) continue;
-    for (const [candidate, image] of localPhotoByDishName) {
-      if (candidate.length >= 5 && (candidate.includes(key) || key.includes(candidate))) {
-        return { image, representative: false };
-      }
-    }
-  }
-
-  const categoryKey = categorySlug(category);
-  return {
-    image: categoryPhoto4K[categoryKey] || "assets/hero-shawarma.webp",
-    representative: true
-  };
-}
-
 const menuSource = window.KHAN_MENU_SOURCE || {};
 menuCategories = [];
 let menuItems = [];
@@ -443,7 +374,6 @@ function productPriceRange(product) {
 function productToMenuItem(product, category) {
   const range = productPriceRange(product);
   const basePrice = asPrice(product.discounted_price) ?? asPrice(product.price);
-  const photo = local4KPhotoFor(product, category);
   return {
     id: `official-${product.id}`,
     name: product.title?.en || product.title?.ar || "Menu item",
@@ -456,11 +386,9 @@ function productToMenuItem(product, category) {
     priceMin: range?.min ?? basePrice,
     priceMax: range?.max ?? basePrice,
     priceStatus: Number.isFinite(basePrice) ? "verified" : "unverified",
-    image: photo.image,
-    illustrative: photo.representative,
-    official: false,
-    photo4K: true,
-    representativePhoto: photo.representative
+    image: product.images?.[0]?.image || category.image || "assets/image-fallback.svg",
+    illustrative: false,
+    official: true
   };
 }
 
@@ -690,19 +618,15 @@ function formatPrice(item) {
 function menuCard(item) {
   const isArabic = currentLanguage === "ar";
   const imageLabel = isArabic
-    ? (item.representativePhoto ? "صورة 4K ممثلة للقسم" : item.photo4K ? "صورة منيو بدقة 4K" : item.official ? "صورة المنتج الرسمية" : item.illustrative ? "صورة توضيحية" : "صورة من قائمة المطعم")
-    : (item.representativePhoto ? "Representative 4K category photo" : item.photo4K ? "4K menu photo" : item.official ? "Official product image" : item.illustrative ? "Illustrative image" : "Restaurant listing photo");
+    ? (item.official ? "صورة المنتج الرسمية" : item.illustrative ? "صورة توضيحية" : "صورة من قائمة المطعم")
+    : (item.official ? "Official product image" : item.illustrative ? "Illustrative image" : "Restaurant listing photo");
   const displayName = isArabic ? item.arabic : item.name;
   const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
   return `
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="-1">
       <div class="menu-card-media">
         <img src="${escapeHTML(item.image)}" alt="${escapeHTML(`${displayName} — ${imageLabel}`)}" width="3840" height="2160" loading="lazy" decoding="async">
-        ${item.representativePhoto
-          ? `<span class="image-label">${isArabic ? "صورة القسم 4K" : "4K category photo"}</span>`
-          : item.photo4K
-            ? `<span class="image-label">${isArabic ? "صورة 4K" : "4K photo"}</span>`
-            : item.official
+        ${item.official
           ? `<span class="image-label">${isArabic ? "صورة رسمية" : "Official product"}</span>`
           : item.illustrative ? `<span class="image-label">${isArabic ? "توضيحية" : "Illustrative"}</span>` : ""}
       </div>
