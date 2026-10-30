@@ -416,19 +416,9 @@ function productToMenuItem(product, category) {
 function updateMenuSourceMessage() {
   const element = document.getElementById("menuSource");
   if (!element) return;
-  const isArabic = currentLanguage === "ar";
-  if (menuLoadState === "loading") {
-    element.textContent = isArabic ? "جارٍ تحميل الأسعار الحالية من منيو المطعم الرسمي…" : "Loading current prices from the restaurant's official menu…";
-    return;
-  }
-  if (menuLoadState === "error") {
-    element.textContent = isArabic ? "تعذر تحميل الأسعار الحالية. الأسعار غير متاحة مؤقتًا، ولم يتم عرض أي سعر غير مؤكد." : "Current prices could not be loaded. Prices are temporarily unavailable; no unverified prices are shown.";
-    return;
-  }
-  const count = menuItems.length;
-  element.textContent = isArabic
-    ? `تم تحميل ${new Intl.NumberFormat("ar-EG").format(count)} صنفًا بأسعار الجنيه المصري من منيو خان الحرير الرسمي${failedCategoryCount ? `؛ تعذر تحميل ${new Intl.NumberFormat("ar-EG").format(failedCategoryCount)} قسم.` : "."}`
-    : `${count} current items with EGP prices loaded from Khan Al Harir's official menu${failedCategoryCount ? `; ${failedCategoryCount} categories could not be loaded.` : "."}`;
+  element.textContent = currentLanguage === "ar"
+    ? "المطبخ الحلبي حكاية من النكهات العريقة والكرم الذي يجمع الأحبة حول السفرة."
+    : "Halaby cuisine is a story of timeless flavors and generous tables that bring loved ones together.";
 }
 
 async function fetchJSON(url) {
