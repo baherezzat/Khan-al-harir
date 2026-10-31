@@ -1,0 +1,9 @@
+{
+  "name": "khan-al-harir-website",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
+
