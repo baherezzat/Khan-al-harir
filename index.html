@@ -301,6 +301,25 @@
     View the menu <span aria-hidden="true">↓</span>
   </a>
 
+  <dialog class="menu-detail" id="menuDetail" aria-labelledby="menuDetailName">
+    <div class="menu-detail-frame">
+      <button class="menu-detail-close" id="menuDetailClose" type="button" aria-label="Close dish details">×</button>
+      <div class="menu-detail-media">
+        <img id="menuDetailImage" src="assets/image-fallback.svg" alt="">
+      </div>
+      <div class="menu-detail-copy">
+        <p class="menu-detail-category" id="menuDetailCategory"></p>
+        <h2 id="menuDetailName"></h2>
+        <p class="menu-detail-secondary" id="menuDetailSecondary" lang="ar" dir="rtl"></p>
+        <p class="menu-detail-description" id="menuDetailDescription"></p>
+        <div class="menu-detail-price-wrap">
+          <span id="menuDetailPriceLabel">Price</span>
+          <strong id="menuDetailPrice"></strong>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="lightbox" id="lightbox" aria-label="Food photo viewer">
     <div class="lightbox-frame">
       <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close photo viewer">×</button>

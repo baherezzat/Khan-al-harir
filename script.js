@@ -558,6 +558,10 @@ function setLanguage(language, persist = true) {
     : (isArabic ? "إغلاق قائمة التنقل" : "Close navigation"));
 
   renderMenu();
+  if (menuDetail?.open && menuDetailItemId) {
+    const openItem = menuItems.find(item => item.id === menuDetailItemId);
+    if (openItem) populateMenuDetail(openItem);
+  }
   if (lightbox.open) updateLightbox(galleryIndex);
   if (persist) {
     try { localStorage.setItem("khan-language", currentLanguage); } catch (_) { /* optional preference */ }
@@ -656,7 +660,7 @@ function menuCard(item) {
   const displayName = isArabic ? item.arabic : item.name;
   const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
   return `
-    <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="-1">
+    <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${escapeHTML(isArabic ? `عرض تفاصيل ${displayName}` : `View details for ${displayName}`)}">
       <div class="menu-card-media">
         <img src="${escapeHTML(item.image)}" alt="${escapeHTML(`${displayName} — ${imageLabel}`)}" width="3840" height="2160" loading="lazy" decoding="async">
         ${item.official
@@ -672,6 +676,7 @@ function menuCard(item) {
         <p class="menu-card-description">${escapeHTML(description)}</p>
         <div class="menu-card-footer">
           <p class="menu-card-price" data-price-status="${escapeHTML(priceDetails(item).status)}">${formatPrice(item)}</p>
+          <span class="menu-card-view">${isArabic ? "عرض التفاصيل" : "View details"} <span aria-hidden="true">↗</span></span>
         </div>
       </div>
     </article>`;
@@ -759,6 +764,71 @@ showMore.addEventListener("click", () => {
   renderMenu();
   const firstNewCard = menuGrid.children[firstNewIndex];
   if (showMore.hidden && firstNewCard) firstNewCard.focus({ preventScroll: true });
+});
+
+// Clicking any menu card opens a focused, bilingual dish detail dialog.
+const menuDetail = document.getElementById("menuDetail");
+const menuDetailImage = document.getElementById("menuDetailImage");
+const menuDetailCategory = document.getElementById("menuDetailCategory");
+const menuDetailName = document.getElementById("menuDetailName");
+const menuDetailSecondary = document.getElementById("menuDetailSecondary");
+const menuDetailDescription = document.getElementById("menuDetailDescription");
+const menuDetailPriceLabel = document.getElementById("menuDetailPriceLabel");
+const menuDetailPrice = document.getElementById("menuDetailPrice");
+let menuDetailItemId = null;
+let menuDetailOpener = null;
+
+function populateMenuDetail(item) {
+  const isArabic = currentLanguage === "ar";
+  const displayName = isArabic ? item.arabic : item.name;
+  const secondaryName = isArabic ? item.name : item.arabic;
+  const description = isArabic
+    ? (item.descriptionAr || arabicMenuDescriptions[item.category])
+    : (item.description || "From the current online menu.");
+  menuDetailImage.src = item.image;
+  menuDetailImage.alt = isArabic ? `صورة ${displayName}` : `${displayName} dish`;
+  menuDetailCategory.textContent = currentCategoryLabel(item.category);
+  menuDetailName.textContent = displayName;
+  menuDetailSecondary.textContent = secondaryName;
+  menuDetailSecondary.lang = isArabic ? "en" : "ar";
+  menuDetailSecondary.dir = isArabic ? "ltr" : "rtl";
+  menuDetailDescription.textContent = description;
+  menuDetailPriceLabel.textContent = isArabic ? "السعر" : "Price";
+  menuDetailPrice.textContent = formatPrice(item);
+  menuDetailPrice.dataset.priceStatus = priceDetails(item).status;
+  menuDetail.setAttribute("aria-label", isArabic ? `تفاصيل ${displayName}` : `${displayName} details`);
+  document.getElementById("menuDetailClose").setAttribute("aria-label", isArabic ? "إغلاق تفاصيل الطبق" : "Close dish details");
+}
+
+function openMenuDetail(itemId, opener) {
+  const item = menuItems.find(candidate => candidate.id === itemId);
+  if (!item) return;
+  menuDetailItemId = itemId;
+  menuDetailOpener = opener;
+  populateMenuDetail(item);
+  menuDetail.showModal();
+  document.body.classList.add("is-locked");
+}
+
+menuGrid.addEventListener("click", event => {
+  const card = event.target.closest(".menu-card");
+  if (card) openMenuDetail(card.dataset.itemId, card);
+});
+
+menuGrid.addEventListener("keydown", event => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const card = event.target.closest(".menu-card");
+  if (!card) return;
+  event.preventDefault();
+  openMenuDetail(card.dataset.itemId, card);
+});
+
+document.getElementById("menuDetailClose").addEventListener("click", () => menuDetail.close());
+menuDetail.addEventListener("click", event => { if (event.target === menuDetail) menuDetail.close(); });
+menuDetail.addEventListener("close", () => {
+  document.body.classList.remove("is-locked");
+  menuDetailOpener?.focus({ preventScroll: true });
+  menuDetailItemId = null;
 });
 
 document.querySelectorAll("[data-category-link]").forEach(button => {
