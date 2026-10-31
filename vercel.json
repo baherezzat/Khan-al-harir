@@ -2,6 +2,9 @@
   "functions": {
     "api/whatsapp.js": {
       "maxDuration": 30
+    },
+    "api/offer-image.js": {
+      "maxDuration": 20
     }
   }
 }

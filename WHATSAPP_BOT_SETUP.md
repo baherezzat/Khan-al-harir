@@ -35,12 +35,21 @@ In the Meta app dashboard, open **WhatsApp → Configuration**:
 
 Send these messages to the connected business number:
 
+- `Hi` — sends only the complete live website menu link at the beginning of the chat.
 - `What offers do you have?`
 - `بكام عرض البرجر؟`
 - `Where is the restaurant?`
 - `كم سعر حراري؟`
 
-The bot reads current dishes, descriptions, offers, variants, and EGP prices from Khan Al Harir's official QR menu. It does not invent calories or other unpublished restaurant information.
+The bot reads current dishes, descriptions, offers, variants, images, and EGP prices from Khan Al Harir's official QR menu. A greeting sends only the complete live website menu link. Offer questions send up to three official offer pictures with names and prices before the answer. It does not invent calories or other unpublished restaurant information.
+
+When a customer asks about a specific menu item, the reply includes its verified current price. Calories are only discussed when the customer asks, and the bot never invents them.
+
+Instagram, TikTok, and Facebook questions return the matching official page link directly.
+
+The assistant is named **Khan Al Harir Service** and answers only Khan Al Harir-related questions.
+
+Opening-hours questions say the restaurant closes at 3:00 AM. Until the opening time is confirmed, the bot directs customers to hotline 19443 instead of guessing.
 
 Before production use, publish a customer privacy notice explaining that WhatsApp messages are processed by the restaurant's automated assistant and its AI provider. Follow Meta's customer opt-in and messaging-policy requirements. The OpenAI request is configured with `store: false`.
 
