@@ -51,5 +51,7 @@ The assistant is named **Khan Al Harir Service** and answers only Khan Al Harir-
 
 Opening-hours questions say the restaurant closes at 3:00 AM. Until the opening time is confirmed, the bot directs customers to hotline 19443 instead of guessing.
 
+The chatbot itself is available 24/7 and clearly distinguishes its availability from the restaurant's hours.
+
 Before production use, publish a customer privacy notice explaining that WhatsApp messages are processed by the restaurant's automated assistant and its AI provider. Follow Meta's customer opt-in and messaging-policy requirements. The OpenAI request is configured with `store: false`.
 

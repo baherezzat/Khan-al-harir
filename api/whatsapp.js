@@ -223,6 +223,9 @@ function fallbackAnswer(question, menu) {
   if (/phone|call|hotline|delivery|رقم|تليفون|هاتف|دليفري|توصيل/.test(normalized)) {
     return arabic ? "الخط الساخن للتوصيل: 19443\nهاتف الفرع: +20 105 071 4404" : "Delivery hotline: 19443\nBranch phone: +20 105 071 4404";
   }
+  if (/bot|chatbot|assistant|الشات بوت|البوت|المساعد/.test(normalized) && /hour|open|available|24|مواعيد|مفتوح|متاح/.test(normalized)) {
+    return arabic ? `${BOT_NAME} متاح 24 ساعة طوال الأسبوع.` : `${BOT_NAME} is available 24/7.`;
+  }
   if (/hour|open|close|مواعيد|يفتح|يقفل/.test(normalized)) {
     return arabic
       ? "يغلق المطعم الساعة 3:00 صباحًا. وقت الفتح غير مؤكد حاليًا؛ للتأكيد اتصل على 19443."
@@ -259,7 +262,7 @@ async function createAIAnswer(question, menu) {
     },
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || "gpt-6-luna",
-      instructions: `Your name is ${BOT_NAME}. Only answer questions related to Khan Al Harir. If asked about opening hours, say the restaurant closes at 3:00 AM. The opening time is not currently confirmed, so offer 19443 to verify it and never guess.\n${instructions}`,
+      instructions: `Your name is ${BOT_NAME}. Only answer questions related to Khan Al Harir. The chatbot is available 24/7. If asked about restaurant opening hours, say the restaurant closes at 3:00 AM. The restaurant opening time is not currently confirmed, so offer 19443 to verify it and never guess. Clearly distinguish chatbot availability from restaurant hours.\n${instructions}`,
       input: question,
       max_output_tokens: 350,
       store: false
