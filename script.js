@@ -268,7 +268,11 @@ const staticTextAr = new Map(Object.entries({
   "Syrian & Middle Eastern restaurant": "مطعم سوري وشرق أوسطي",
   "From the kitchen": "من المطبخ",
   "A feast for the eyes.": "وليمة تسرّ العين.",
-  "A selection of Khan Al Harir dishes and table favorites.": "تشكيلة من أطباق خان الحرير ومفضلات السفرة.",
+  "Watch Khan Al Harir’s latest reel from Facebook.": "شاهد أحدث ريل لخان الحرير من فيسبوك.",
+  "Loading the reel…": "جارٍ تحميل الريل…",
+  "Turn sound on": "تشغيل الصوت",
+  "Turn sound off": "كتم الصوت",
+  "Watch on Facebook": "شاهد على فيسبوك",
   "Friends Tray": "صينية الأصدقاء",
   "Shawarma Saj": "شاورما صاج",
   "Hummus & pita": "حمص وخبز",
@@ -326,6 +330,10 @@ const attributeTextAr = new Map(Object.entries({
   "Close photo viewer": "إغلاق عارض الصور",
   "Previous photo": "الصورة السابقة",
   "Next photo": "الصورة التالية",
+  "Khan Al Harir Facebook reel": "ريل خان الحرير على فيسبوك",
+  "Play video": "تشغيل الفيديو",
+  "Turn sound on": "تشغيل الصوت",
+  "Turn sound off": "كتم الصوت",
   "Khan Al Harir social media": "حسابات خان الحرير على وسائل التواصل",
   "Open Khan Al Harir on Facebook": "افتح صفحة خان الحرير على فيسبوك",
   "Open Khan Al Harir on Instagram": "افتح صفحة خان الحرير على إنستجرام",
@@ -820,6 +828,7 @@ function setLanguage(language, persist = true) {
   if (lightbox.open) updateLightbox(galleryIndex);
   updateCartLanguage();
   renderCart();
+  updateReelLabels();
   if (persist) {
     try { localStorage.setItem("khan-language", currentLanguage); } catch (_) { /* optional preference */ }
   }
@@ -1587,6 +1596,128 @@ document.addEventListener("keydown", event => {
   }
 });
 
+// Lazy Facebook Reel player: preload near the section, autoplay muted at 50%,
+// pause off-screen, and retain explicit play/sound/fallback controls.
+const reelShowcase = document.getElementById("facebookReel");
+const reelPoster = document.getElementById("reelPoster");
+const reelPlay = document.getElementById("reelPlay");
+const reelSound = document.getElementById("reelSound");
+const reelFallback = document.getElementById("reelFallback");
+let facebookReelPlayer = null;
+let reelInView = false;
+let reelSdkRequested = false;
+let reelFallbackTimer = null;
+
+function updateReelLabels() {
+  if (!reelShowcase) return;
+  const isArabic = currentLanguage === "ar";
+  const soundOn = reelSound.getAttribute("aria-pressed") === "true";
+  const soundLabel = soundOn
+    ? (isArabic ? "كتم الصوت" : "Turn sound off")
+    : (isArabic ? "تشغيل الصوت" : "Turn sound on");
+  reelSound.setAttribute("aria-label", soundLabel);
+  reelSound.querySelector("span").textContent = soundLabel;
+  reelPlay.setAttribute("aria-label", isArabic ? "تشغيل الفيديو" : "Play video");
+  reelShowcase.querySelector(".reel-frame").setAttribute("aria-label", isArabic ? "ريل خان الحرير على فيسبوك" : "Khan Al Harir Facebook reel");
+  reelFallback.firstChild.nodeValue = isArabic ? "شاهد على فيسبوك " : "Watch on Facebook ";
+}
+
+function showReelFallback() {
+  if (facebookReelPlayer) return;
+  reelPoster.querySelector("span").textContent = currentLanguage === "ar" ? "تعذر تحميل الريل هنا" : "The reel could not load here";
+  reelPoster.classList.add("has-error");
+  reelFallback.hidden = false;
+  reelPlay.hidden = true;
+}
+
+function tryReelPlayback() {
+  if (!facebookReelPlayer || !reelInView) return;
+  try {
+    facebookReelPlayer.mute();
+    reelSound.setAttribute("aria-pressed", "false");
+    updateReelLabels();
+    const result = facebookReelPlayer.play();
+    reelPlay.hidden = true;
+    if (result && typeof result.catch === "function") result.catch(() => { reelPlay.hidden = false; });
+  } catch (_) {
+    reelPlay.hidden = false;
+  }
+}
+
+function connectFacebookReel(message) {
+  if (message?.type !== "video" || facebookReelPlayer) return;
+  facebookReelPlayer = message.instance;
+  window.clearTimeout(reelFallbackTimer);
+  reelShowcase.classList.add("is-ready");
+  reelSound.hidden = false;
+  reelFallback.hidden = true;
+  try {
+    facebookReelPlayer.subscribe("startedPlaying", () => { reelPlay.hidden = true; });
+    facebookReelPlayer.subscribe("paused", () => { if (reelInView) reelPlay.hidden = false; });
+  } catch (_) { /* older player versions may not expose instance events */ }
+  tryReelPlayback();
+}
+
+function loadFacebookReel() {
+  if (reelSdkRequested || !reelShowcase) return;
+  reelSdkRequested = true;
+  window.fbAsyncInit = function facebookReady() {
+    window.FB.init({ xfbml: false, version: "v24.0" });
+    window.FB.Event.subscribe("xfbml.ready", connectFacebookReel);
+    window.FB.XFBML.parse(reelShowcase);
+  };
+  const sdk = document.createElement("script");
+  sdk.id = "facebook-jssdk";
+  sdk.async = true;
+  sdk.defer = true;
+  sdk.crossOrigin = "anonymous";
+  sdk.src = `https://connect.facebook.net/${currentLanguage === "ar" ? "ar_AR" : "en_US"}/sdk.js`;
+  sdk.onerror = showReelFallback;
+  document.head.appendChild(sdk);
+  reelFallbackTimer = window.setTimeout(showReelFallback, 15000);
+}
+
+if (reelShowcase && "IntersectionObserver" in window) {
+  const reelPreloader = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    loadFacebookReel();
+    reelPreloader.disconnect();
+  }, { rootMargin: "600px 0px", threshold: 0.01 });
+  reelPreloader.observe(reelShowcase);
+
+  const reelVisibility = new IntersectionObserver(entries => {
+    const entry = entries[0];
+    reelInView = Boolean(entry?.isIntersecting && entry.intersectionRatio >= 0.5);
+    if (reelInView) tryReelPlayback();
+    else if (facebookReelPlayer) {
+      try { facebookReelPlayer.pause(); } catch (_) { /* player may still be initializing */ }
+    }
+  }, { threshold: [0, 0.5, 0.75] });
+  reelVisibility.observe(reelShowcase);
+} else if (reelShowcase) {
+  loadFacebookReel();
+}
+
+reelPlay?.addEventListener("click", () => {
+  if (!facebookReelPlayer) { showReelFallback(); return; }
+  try {
+    const result = facebookReelPlayer.play();
+    reelPlay.hidden = true;
+    if (result && typeof result.catch === "function") result.catch(() => { reelPlay.hidden = false; });
+  } catch (_) { reelPlay.hidden = false; }
+});
+
+reelSound?.addEventListener("click", () => {
+  if (!facebookReelPlayer) return;
+  const turnOn = reelSound.getAttribute("aria-pressed") !== "true";
+  try {
+    if (turnOn) facebookReelPlayer.unmute();
+    else facebookReelPlayer.mute();
+    reelSound.setAttribute("aria-pressed", String(turnOn));
+    updateReelLabels();
+  } catch (_) { /* controls stay muted when the player blocks sound */ }
+});
+
 // Native dialog gallery with wraparound previous/next controls.
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightboxImage");
@@ -1675,7 +1806,7 @@ if ("IntersectionObserver" in window && !prefersReducedMotion.matches) {
     });
   }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
 
-  document.querySelectorAll(".cuisine-tile, .section-heading, .order-inner, .about-image-wrap, .about-copy, .gallery-item, .contact-grid > *").forEach((element, index) => {
+  document.querySelectorAll(".cuisine-tile, .section-heading, .order-inner, .about-image-wrap, .about-copy, .reel-showcase, .contact-grid > *").forEach((element, index) => {
     element.classList.add("reveal-prep");
     element.style.transitionDelay = `${(index % 3) * 45}ms`;
     revealObserver.observe(element);

@@ -11,11 +11,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" href="assets/hero-shawarma.webp" as="image">
-  <link rel="stylesheet" href="style.css?v=20261101-6">
+  <link rel="stylesheet" href="style.css?v=20261102-1">
   <script src="online-menu.js" defer></script>
-  <script src="script.js?v=20261101-9" defer></script>
+  <script src="script.js?v=20261102-1" defer></script>
 </head>
 <body>
+  <div id="fb-root"></div>
   <a class="skip-link" href="#main">Skip to main content</a>
 
   <header class="site-header" id="siteHeader">
@@ -194,38 +195,32 @@
             <p class="eyebrow">From the kitchen <span lang="ar" dir="rtl">من المطبخ</span></p>
             <h2 id="galleryTitle">A feast for the eyes.</h2>
           </div>
-          <p>A selection of Khan Al Harir dishes and table favorites.</p>
+          <p>Watch Khan Al Harir’s latest reel from Facebook.</p>
         </div>
 
-        <div class="gallery-grid" id="galleryGrid">
-          <button class="gallery-item gallery-wide" type="button" data-full="assets/menu/friends-tray-4k-generated-v2.jpg" data-caption="Friends Tray">
-            <img src="assets/menu/friends-tray-4k-generated-v2.jpg" alt="Generated 4K photograph of a Syrian Friends Tray with grilled meats, chicken, rice, bread, hummus, garlic sauce, and pickles" width="3840" height="2160" loading="lazy">
-            <span>Friends Tray</span>
-          </button>
-          <button class="gallery-item" type="button" data-full="assets/hummus-bowl.webp" data-caption="Hummus and pita">
-            <img src="assets/hummus-bowl.webp" alt="Illustrative bowls of hummus served with pita and olive oil" width="3840" height="2160" loading="lazy">
-            <span>Hummus &amp; pita</span>
-          </button>
-          <button class="gallery-item" type="button" data-full="assets/menu/lentil-soup-4k-generated-v2.jpg" data-caption="Lentil Soup">
-            <img src="assets/menu/lentil-soup-4k-generated-v2.jpg" alt="Generated 4K photograph of Syrian lentil soup with lemon wedges and toasted pita" width="3840" height="2160" loading="lazy">
-            <span>Lentil Soup</span>
-          </button>
-          <button class="gallery-item gallery-feature-pair" type="button" data-full="assets/menu/shawarma-saj-4k-generated-v2.jpg" data-caption="Shawarma Saj">
-            <img src="assets/menu/shawarma-saj-4k-generated-v2.jpg" alt="Generated 4K photograph of chicken shawarma wrapped in toasted saj bread" width="3840" height="2160" loading="lazy">
-            <span>Shawarma Saj</span>
-          </button>
-          <button class="gallery-item gallery-feature-pair" type="button" data-full="assets/menu/charcoal-chicken-4k-generated-v2.jpg" data-caption="Charcoal Chicken">
-            <img src="assets/menu/charcoal-chicken-4k-generated-v2.jpg" alt="Generated 4K photograph of charcoal chicken served with fries, rice, garlic sauce, and pickles" width="3840" height="2160" loading="lazy">
-            <span>Charcoal Chicken</span>
-          </button>
-          <button class="gallery-item gallery-wide" type="button" data-full="assets/kunafa-illustrative.webp" data-caption="Kunafa">
-            <img src="assets/kunafa-illustrative.webp" alt="Illustrative golden kunafa with pistachios on a dark ceramic plate" width="3840" height="2160" loading="lazy">
-            <span>Kunafa</span>
-          </button>
-          <button class="gallery-item gallery-wide" type="button" data-full="assets/cuisine-drinks-official-3840.webp" data-caption="V Cola drinks">
-            <img src="assets/cuisine-drinks-official-3840.webp" alt="Official V and V7 product photos for Cola, Diet Cola, Blueberry, Pink Lemonade, Lemon, and Pomegranate" width="3840" height="2160" loading="lazy">
-            <span>V Cola drinks</span>
-          </button>
+        <div class="reel-showcase" id="facebookReel" data-reel-url="https://www.facebook.com/reel/4587702848213268">
+          <div class="reel-frame" aria-label="Khan Al Harir Facebook reel">
+            <div class="reel-poster" id="reelPoster" aria-live="polite">
+              <img src="assets/khan-logo.webp" alt="" width="112" height="112">
+              <span>Loading the reel…</span>
+            </div>
+            <div class="fb-video" id="facebookReelPlayer"
+              data-href="https://www.facebook.com/reel/4587702848213268"
+              data-width="400"
+              data-autoplay="false"
+              data-allowfullscreen="true"
+              data-show-text="false"></div>
+            <button class="reel-play" id="reelPlay" type="button" aria-label="Play video" hidden>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 7 8 5-8 5Z"/></svg>
+            </button>
+            <button class="reel-sound" id="reelSound" type="button" aria-label="Turn sound on" aria-pressed="false" hidden>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 10v4h3l4 3V7l-4 3H5Z"/><path class="sound-wave" d="M15 9.5a4 4 0 0 1 0 5M17.5 7a7 7 0 0 1 0 10"/><path class="sound-muted" d="m16 10 4 4m0-4-4 4"/></svg>
+              <span>Turn sound on</span>
+            </button>
+            <a class="reel-fallback" id="reelFallback" href="https://www.facebook.com/reel/4587702848213268" target="_blank" rel="noopener noreferrer" hidden>
+              Watch on Facebook <span aria-hidden="true">↗</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>
