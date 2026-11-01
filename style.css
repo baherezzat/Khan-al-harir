@@ -1,3 +1,4 @@
+
 /* Khan Al Harir — mobile-first editorial restaurant design */
 :root {
   /* Primitive palette */
@@ -587,13 +588,14 @@ h2 em, h1 em { font-weight: 400; }
   box-shadow: 0 30px 90px rgba(0, 0, 0, .38);
 }
 .menu-detail::backdrop { background: rgba(8, 23, 17, .84); backdrop-filter: blur(5px); }
-.menu-detail-frame { position: relative; display: grid; max-height: calc(100dvh - 24px); overflow: auto; }
+.menu-detail-frame { position: relative; display: grid; max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .menu-detail-close { position: absolute; z-index: 2; top: 14px; right: 14px; display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid rgba(245, 243, 237, .7); border-radius: 50%; background: rgba(8, 23, 17, .84); color: #fff; font-size: 30px; line-height: 1; }
 .menu-detail-close:hover, .menu-detail-close:focus-visible { background: var(--p-orange); color: var(--p-ink); }
 .menu-detail-media { min-height: 250px; aspect-ratio: 4 / 3; overflow: hidden; background: var(--p-line); }
 .menu-detail-media img { width: 100%; height: 100%; object-fit: cover; }
 .menu-card-options-badge { position: absolute; right: 12px; bottom: 12px; border-radius: 999px; background: var(--p-cream); color: var(--p-green-deep); padding: 6px 10px; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
-.menu-detail-copy { display: flex; flex-direction: column; padding: 30px 24px 26px; }
+.menu-detail-copy { display: flex; min-height: 0; flex-direction: column; padding: 30px 24px 26px; outline: none; }
+.menu-detail-copy:focus-visible { box-shadow: inset 0 0 0 2px var(--p-orange); }
 .menu-detail-category { color: var(--p-green); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .menu-detail-copy h2 { margin-top: 10px; font-family: var(--serif); font-size: clamp(2.5rem, 10vw, 4.6rem); font-weight: 500; letter-spacing: -.055em; line-height: 1; }
 .menu-detail-secondary { margin-top: 8px; color: var(--p-green); font-family: var(--arabic-serif); font-size: 22px; }
@@ -713,9 +715,12 @@ h2 em, h1 em { font-weight: 400; }
   .section-heading { grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); align-items: end; margin-bottom: 28px; }
   .menu-intro { padding-bottom: 8px; }
   .menu-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-  .menu-detail-frame { grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr); overflow: hidden; }
-  .menu-detail-media { min-height: min(680px, calc(100dvh - 24px)); aspect-ratio: auto; }
-  .menu-detail-copy { min-height: min(680px, calc(100dvh - 24px)); overflow: auto; padding: 58px 48px 42px; }
+  .menu-detail-frame { height: min(680px, calc(100dvh - 24px)); grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr); overflow: hidden; }
+  .menu-detail-media { height: 100%; min-height: 0; aspect-ratio: auto; }
+  .menu-detail-copy { height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--p-green) rgba(0, 84, 49, .1); scrollbar-gutter: stable; scrollbar-width: thin; -webkit-overflow-scrolling: touch; padding: 58px 48px 42px; }
+  .menu-detail-copy::-webkit-scrollbar { width: 8px; }
+  .menu-detail-copy::-webkit-scrollbar-track { background: rgba(0, 84, 49, .1); }
+  .menu-detail-copy::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--p-green); }
   .category-wrap { margin: 0 0 22px; }
   .category-filters { padding-inline: 0; }
   .order-section { padding-block: 42px; }
