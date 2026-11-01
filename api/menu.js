@@ -32,7 +32,10 @@ export default async function handler(request, response) {
   }
 
   try {
-    const categories = await fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`);
+    const [categories, branch] = await Promise.all([
+      fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`),
+      fetchJSON(`${API_BASE}/branches/khan-al-harir`).catch(() => null)
+    ]);
     const completeCategories = [];
     let failedCategoryCount = 0;
 
@@ -52,7 +55,7 @@ export default async function handler(request, response) {
     }
 
     response.setHeader("Cache-Control", "public, s-maxage=120, stale-while-revalidate=86400");
-    return response.status(200).json({ status: true, data: { categories: completeCategories, failedCategoryCount } });
+    return response.status(200).json({ status: true, data: { categories: completeCategories, failedCategoryCount, branch } });
   } catch (error) {
     console.error("Official menu proxy failed", error);
     response.setHeader("Cache-Control", "no-store");

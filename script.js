@@ -208,6 +208,7 @@ let menuItems = [];
 
 let categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
 let categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
+let officialBranchInfo = null;
 
 const staticTextAr = new Map(Object.entries({
   "Skip to main content": "انتقل إلى المحتوى الرئيسي",
@@ -293,7 +294,11 @@ const staticTextAr = new Map(Object.entries({
   "New Cairo, Egypt": "القاهرة الجديدة، مصر",
   "Delivery hotline": "الخط الساخن للتوصيل",
   "Branch phone": "هاتف الفرع",
-  "Contact and address details are shown as published in the restaurant directory listing. Opening hours are not displayed because they could not be verified.": "تُعرض بيانات التواصل والعنوان كما نُشرت في دليل المطعم. لا تُعرض مواعيد العمل لعدم التمكن من التحقق منها.",
+  "Opening hours": "مواعيد العمل",
+  "Every day: 9:00 AM – 4:00 AM": "يوميًا: من ٩:٠٠ صباحًا حتى ٤:٠٠ صباحًا",
+  "Updated automatically from the official QR menu.": "تُحدّث تلقائيًا من منيو QR الرسمي.",
+  "Restaurant information and opening hours are sourced from Khan Al Harir’s official QR menu.": "بيانات المطعم ومواعيد العمل مأخوذة من منيو QR الرسمي لخان الحرير.",
+  "Availability, prices, and opening hours update from the official QR menu.": "يتم تحديث التوفر والأسعار ومواعيد العمل من منيو QR الرسمي.",
   "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
   "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي.",
   "Follow Khan Al Harir": "تابع خان الحرير",
@@ -462,12 +467,13 @@ function readOfficialMenuCache() {
   }
 }
 
-function writeOfficialMenuCache(categories, items) {
+function writeOfficialMenuCache(categories, items, branch) {
   try {
     localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({
       savedAt: Date.now(),
       categories: categories.map(({ id, label, ar, sourceId }) => ({ id, label, ar, sourceId })),
-      items
+      items,
+      branch: branch || null
     }));
   } catch (_) {
     // A full menu still works when storage is disabled or full.
@@ -524,13 +530,76 @@ async function fetchJSON(url) {
 async function fetchOfficialMenuBundle(apiBase, branchId) {
   try {
     const bundle = await fetchJSON("/api/menu");
-    if (Array.isArray(bundle?.categories) && bundle.categories.length) return bundle.categories;
+    if (Array.isArray(bundle?.categories) && bundle.categories.length) return bundle;
   } catch (_) {
     // Fall back to the official public API if the shared cache is unavailable.
   }
 
-  const categories = await fetchJSON(`${apiBase}/branches/${branchId}/categories`);
-  return categories.map(category => ({ ...category, products: null }));
+  const [categories, branch] = await Promise.all([
+    fetchJSON(`${apiBase}/branches/${branchId}/categories`),
+    fetchJSON(`${apiBase}/branches/khan-al-harir`).catch(() => null)
+  ]);
+  return { categories: categories.map(category => ({ ...category, products: null })), branch };
+}
+
+const dayLabels = {
+  saturday: ["Saturday", "السبت"],
+  sunday: ["Sunday", "الأحد"],
+  monday: ["Monday", "الاثنين"],
+  tuesday: ["Tuesday", "الثلاثاء"],
+  wednesday: ["Wednesday", "الأربعاء"],
+  thursday: ["Thursday", "الخميس"],
+  friday: ["Friday", "الجمعة"]
+};
+
+function formatOfficialTime(value) {
+  const [hours = 0, minutes = 0] = String(value || "00:00").split(":").map(Number);
+  const date = new Date(2020, 0, 1, hours, minutes);
+  return new Intl.DateTimeFormat(currentLanguage === "ar" ? "ar-EG" : "en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  }).format(date);
+}
+
+function renderOfficialHours() {
+  const summary = document.getElementById("openingHoursSummary");
+  const source = document.getElementById("openingHoursSource");
+  if (!summary || !source || !officialBranchInfo) return;
+  const hours = officialBranchInfo.working_hours || officialBranchInfo.workingHours || [];
+  if (!hours.length) return;
+
+  const signatures = hours.map(entry => entry.is_open_24_hours
+    ? "24"
+    : `${entry.from || ""}-${entry.to || ""}`);
+  const allDaysMatch = signatures.every(signature => signature === signatures[0]);
+  const formatRange = entry => {
+    if (entry.is_open_24_hours) return currentLanguage === "ar" ? "مفتوح ٢٤ ساعة" : "Open 24 hours";
+    const from = formatOfficialTime(entry.from);
+    const to = formatOfficialTime(entry.to);
+    return currentLanguage === "ar" ? `من ${from} حتى ${to}` : `${from} – ${to}`;
+  };
+
+  if (allDaysMatch) {
+    summary.textContent = currentLanguage === "ar"
+      ? `يوميًا: ${formatRange(hours[0])}`
+      : `Every day: ${formatRange(hours[0])}`;
+  } else {
+    summary.innerHTML = hours.map(entry => {
+      const labels = dayLabels[entry.day] || [entry.day, entry.day];
+      const day = currentLanguage === "ar" ? labels[1] : labels[0];
+      return `<span class="hours-row"><b>${escapeHTML(day)}</b><span>${escapeHTML(formatRange(entry))}</span></span>`;
+    }).join("");
+  }
+  source.textContent = currentLanguage === "ar"
+    ? "تُحدّث تلقائيًا من منيو QR الرسمي."
+    : "Updated automatically from the official QR menu.";
+}
+
+function applyOfficialBranchInfo(branch) {
+  if (!branch || !Array.isArray(branch.working_hours || branch.workingHours)) return;
+  officialBranchInfo = branch;
+  renderOfficialHours();
 }
 
 async function loadOfficialMenu({ preserveView = false } = {}) {
@@ -548,12 +617,15 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
   const cachedMenu = readOfficialMenuCache();
   if (!menuItems.length && cachedMenu) {
     applyOfficialMenu(cachedMenu.categories, cachedMenu.items, { preserveView });
+    applyOfficialBranchInfo(cachedMenu.branch);
     updateMenuSourceMessage();
     renderMenu();
     preserveView = true;
   }
   try {
-    const categories = await fetchOfficialMenuBundle(apiBase, branchId);
+    const bundle = await fetchOfficialMenuBundle(apiBase, branchId);
+    const categories = bundle.categories;
+    applyOfficialBranchInfo(bundle.branch);
     const nextCategories = categories.map(category => ({
       id: categorySlug(category),
       label: category.title?.en || category.title?.ar || "Menu",
@@ -591,7 +663,7 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
     const nextSignature = officialMenuSignature(loadedItems);
     const menuChanged = nextSignature !== lastMenuSignature;
     applyOfficialMenu(nextCategories, loadedItems, { preserveView });
-    if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems);
+    if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems, officialBranchInfo);
     updateMenuSourceMessage();
     if (menuChanged || !preserveView) renderMenu();
   } catch (error) {
@@ -670,6 +742,7 @@ function setLanguage(language, persist = true) {
     : "Explore Khan Al Harir’s current Halaby and Syrian menu with official EGP prices in New Cairo.";
   translateStaticContent(currentLanguage);
   updateMenuSourceMessage();
+  renderOfficialHours();
 
   const languageToggle = document.getElementById("languageToggle");
   languageToggle.setAttribute("aria-pressed", String(isArabic));

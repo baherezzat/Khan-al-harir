@@ -516,6 +516,10 @@ h2 em, h1 em { font-weight: 400; }
 .contact-details > div { display: grid; gap: 6px; border-top: 1px solid rgba(245, 243, 237, .35); padding-top: 20px; }
 .contact-details span { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 .contact-details strong, .contact-details a { font-family: var(--serif); font-size: 28px; font-weight: 400; letter-spacing: -.035em; line-height: 1.2; }
+.official-hours strong { display: grid; gap: 7px; font-family: var(--serif); font-size: clamp(22px, 2.1vw, 30px); font-weight: 400; letter-spacing: -.03em; line-height: 1.25; }
+.official-hours p { color: rgba(245, 243, 237, .72); font-size: 11px !important; }
+.hours-row { display: grid; grid-template-columns: minmax(90px, .7fr) 1.3fr; gap: 14px; align-items: baseline; }
+.hours-row b { font-family: var(--sans); font-size: 11px; letter-spacing: .04em; }
 .contact-details a { width: fit-content; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 7px; transition: color 180ms ease-out, text-decoration-color 180ms ease-out; }
 .contact-details a:hover { color: var(--p-orange); text-decoration-color: currentColor; }
 .contact-details p { font-size: 14px; }
