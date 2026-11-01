@@ -9,7 +9,7 @@
 const PAGE_SIZE = 12;
 const MENU_REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 const MENU_REFRESH_MIN_GAP_MS = 30 * 1000;
-const MENU_CACHE_KEY = "khan-official-menu-v1";
+const MENU_CACHE_KEY = "khan-official-menu-v2";
 const MENU_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const MENU_REQUEST_RETRIES = 2;
 
@@ -486,6 +486,7 @@ function productToMenuItem(product, category) {
 function officialMenuSignature(items) {
   return JSON.stringify(items.map(item => [
     item.id,
+    item.image,
     item.price,
     item.oldPrice,
     item.priceMin,
