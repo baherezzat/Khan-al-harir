@@ -9,7 +9,7 @@
 const PAGE_SIZE = 12;
 const MENU_REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 const MENU_REFRESH_MIN_GAP_MS = 30 * 1000;
-const MENU_CACHE_KEY = "khan-official-menu-v2";
+const MENU_CACHE_KEY = "khan-official-menu-v1";
 const MENU_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const MENU_REQUEST_RETRIES = 2;
 
@@ -516,6 +516,10 @@ function readOfficialMenuCache() {
     if (!cached || !Array.isArray(cached.categories) || !Array.isArray(cached.items)) return null;
     if (!cached.categories.length || !cached.items.length) return null;
     if (!Number.isFinite(cached.savedAt) || Date.now() - cached.savedAt > MENU_CACHE_MAX_AGE_MS) return null;
+    cached.items = cached.items.map(item => {
+      const originalImage = item.originalImage || item.image || "assets/image-fallback.svg";
+      return { ...item, originalImage, image: enhancedMenuImage(originalImage) };
+    });
     return cached;
   } catch (_) {
     return null;
