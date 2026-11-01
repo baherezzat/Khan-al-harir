@@ -1,4 +1,3 @@
-
 /* Khan Al Harir — mobile-first editorial restaurant design */
 :root {
   /* Primitive palette */
@@ -759,8 +758,16 @@ h2 em, h1 em { font-weight: 400; }
 
 @media (min-width: 1280px) {
   .hero-content { padding-bottom: 64px; }
-  .menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-  .menu-card-body { padding: 17px; }
+  .menu-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .menu-card-media { aspect-ratio: 16 / 9; }
+  .menu-card-body { padding: 13px; }
+  .menu-card h3,
+  html[lang="ar"] .menu-card h3 { font-size: 22px; }
+  .menu-card-arabic { font-size: 17px; }
+  .menu-card-description { margin-top: 7px; font-size: 12px; }
+  .menu-card-footer { gap: 7px; padding-top: 10px; }
+  .menu-card-price { font-size: 14px; }
+  .menu-card-view { padding-top: 9px; font-size: 11px; }
 }
 
 /* The language control switches both reading direction and the typographic voice. */
