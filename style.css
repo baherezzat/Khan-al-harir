@@ -414,7 +414,7 @@ h2 em, h1 em { font-weight: 400; }
 .menu-card:hover, .menu-card:focus-visible { border-color: var(--p-green); box-shadow: 0 14px 36px rgba(8, 23, 17, .12); transform: translateY(-3px); }
 .menu-card:focus-visible { outline: 2px solid var(--p-green); outline-offset: 4px; }
 .menu-card-media { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: var(--p-paper); }
-.menu-card-media img { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; transition: transform 260ms var(--ease); }
+.menu-card-media img { width: 100%; height: 100%; object-fit: cover; image-rendering: auto; transition: transform 260ms var(--ease); }
 .menu-card:hover .menu-card-media img { transform: scale(1.045); }
 .image-label {
   position: absolute;
@@ -592,7 +592,7 @@ h2 em, h1 em { font-weight: 400; }
 .menu-detail-close:hover, .menu-detail-close:focus-visible { background: var(--p-orange); color: var(--p-ink); }
 .menu-detail-media { min-height: 250px; aspect-ratio: 1; overflow: hidden; padding: 8px; background: var(--p-paper); }
 .menu-detail-media img { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; }
-.menu-card-options-badge { position: absolute; right: 12px; bottom: 12px; border-radius: 999px; background: var(--p-cream); color: var(--p-green-deep); padding: 6px 10px; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+.menu-card-options-badge { position: absolute; right: 9px; bottom: 9px; border: 2px solid var(--p-cream); border-radius: 999px; background: var(--p-green-deep); box-shadow: 0 4px 16px rgba(8, 23, 17, .28); color: #fff; padding: 7px 11px; font-size: 11px; font-weight: 800; letter-spacing: .02em; line-height: 1.2; }
 .menu-detail-copy { display: flex; min-height: 0; flex-direction: column; padding: 30px 24px 26px; outline: none; }
 .menu-detail-copy:focus-visible { box-shadow: inset 0 0 0 2px var(--p-orange); }
 .menu-detail-category { color: var(--p-green); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
@@ -825,7 +825,7 @@ html[dir="rtl"] .text-link span,
 html[dir="rtl"] .button svg { transform: scaleX(-1); }
 html[dir="rtl"] .lightbox-close { right: auto; left: 10px; }
 html[dir="rtl"] .menu-detail-close { right: auto; left: 14px; }
-html[dir="rtl"] .menu-card-options-badge { right: auto; left: 12px; }
+html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
 
 @media (max-width: 520px) {
   .customization-list { grid-template-columns: 1fr; }

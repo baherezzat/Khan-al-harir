@@ -14,6 +14,7 @@ export default async function handler(request, response) {
 
   try {
     const source = new URL(String(request.query?.src || ""));
+    const fitMode = request.query?.mode === "cover" ? "cover" : "contain";
     if (source.protocol !== "https:" || !ALLOWED_IMAGE_HOSTS.has(source.hostname)) {
       response.status(400).json({ error: "Unsupported image source" });
       return;
@@ -43,8 +44,8 @@ export default async function handler(request, response) {
       .resize({
         width: OUTPUT_WIDTH,
         height: OUTPUT_HEIGHT,
-        fit: "contain",
-        position: "centre",
+        fit: fitMode,
+        position: fitMode === "cover" ? sharp.strategy.attention : "centre",
         background: "#fbfaf5",
         kernel: sharp.kernel.lanczos3,
         withoutEnlargement: false

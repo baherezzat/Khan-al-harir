@@ -446,12 +446,12 @@ function productCustomizationGroups(product) {
   return [...attributes, ...addons].filter(group => group.values.length);
 }
 
-function enhancedMenuImage(source) {
+function enhancedMenuImage(source, mode = "cover") {
   if (!source) return "assets/image-fallback.svg";
   try {
     const url = new URL(source, window.location.href);
     if (url.protocol === "https:" && url.hostname === "dashboard.iconapp.site") {
-      return `/api/menu-image?v=2&src=${encodeURIComponent(url.href)}`;
+      return `/api/menu-image?v=3&mode=${mode}&src=${encodeURIComponent(url.href)}`;
     }
   } catch {}
   return source;
@@ -917,11 +917,15 @@ function menuCard(item) {
   const isArabic = currentLanguage === "ar";
   const displayName = isArabic ? item.arabic : item.name;
   const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
+  const hasAddons = item.customizationGroups?.some(group => group.kind === "addon");
+  const optionsBadge = hasAddons
+    ? (isArabic ? "+ إضافات متاحة" : "+ Extras available")
+    : (isArabic ? "اختيارات متاحة" : "Options available");
   return `
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${escapeHTML(isArabic ? `عرض تفاصيل ${displayName}` : `View details for ${displayName}`)}">
       <div class="menu-card-media">
-        <img src="${escapeHTML(item.image)}" data-original-src="${escapeHTML(item.originalImage || "")}" alt="${escapeHTML(displayName)}" width="1000" height="1000" loading="lazy" decoding="async">
-        ${item.customizationGroups?.length ? `<span class="menu-card-options-badge">${isArabic ? "خيارات" : "Options"}</span>` : ""}
+        <img src="${escapeHTML(item.image)}" data-original-src="${escapeHTML(item.originalImage || "")}" alt="${escapeHTML(displayName)}" width="1000" height="750" loading="lazy" decoding="async">
+        ${item.customizationGroups?.length ? `<span class="menu-card-options-badge">${optionsBadge}</span>` : ""}
       </div>
       <div class="menu-card-body">
         <p class="menu-card-category">${escapeHTML(currentCategoryLabel(item.category))}</p>
@@ -1115,7 +1119,7 @@ function populateMenuDetail(item) {
   delete menuDetailImage.dataset.fallbackApplied;
   menuDetailImage.classList.remove("has-fallback");
   menuDetailImage.dataset.originalSrc = item.originalImage || "";
-  menuDetailImage.src = item.image;
+  menuDetailImage.src = enhancedMenuImage(item.originalImage || item.image, "contain");
   menuDetailImage.alt = isArabic ? `صورة ${displayName}` : `${displayName} dish`;
   menuDetailCategory.textContent = currentCategoryLabel(item.category);
   menuDetailName.textContent = displayName;
