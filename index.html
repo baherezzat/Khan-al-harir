@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" href="assets/hero-shawarma.webp" as="image">
-  <link rel="stylesheet" href="style.css?v=20261101-5">
+  <link rel="stylesheet" href="style.css?v=20261101-6">
   <script src="online-menu.js" defer></script>
-  <script src="script.js?v=20261101-7" defer></script>
+  <script src="script.js?v=20261101-8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -40,6 +40,12 @@
         View the menu
         <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 8 5 5 5-5"/></svg>
       </a>
+
+      <button class="cart-trigger" id="cartTrigger" type="button" aria-label="Open shopping cart">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 8H6.1M10 20h.01M17 20h.01"/></svg>
+        <span class="cart-trigger-label">Cart</span>
+        <strong id="cartCount" aria-live="polite">0</strong>
+      </button>
 
       <button class="language-toggle" id="languageToggle" type="button" aria-label="Switch to Arabic" aria-pressed="false">
         <span class="language-toggle-icon" aria-hidden="true">ع</span>
@@ -316,11 +322,106 @@
         <p class="menu-detail-secondary" id="menuDetailSecondary" lang="ar" dir="rtl"></p>
         <p class="menu-detail-description" id="menuDetailDescription"></p>
         <div class="menu-detail-options" id="menuDetailOptions" hidden></div>
+        <label class="item-note" for="menuItemNote">
+          <span>Special request</span>
+          <textarea id="menuItemNote" rows="2" maxlength="180" placeholder="For example: no onions"></textarea>
+        </label>
         <div class="menu-detail-price-wrap">
-          <span id="menuDetailPriceLabel">Price</span>
-          <strong id="menuDetailPrice"></strong>
+          <div>
+            <span id="menuDetailPriceLabel">Price</span>
+            <strong id="menuDetailPrice"></strong>
+          </div>
+          <button class="button button-orange menu-add-button" id="menuAddToCart" type="button">Add to cart</button>
         </div>
       </div>
+    </div>
+  </dialog>
+
+  <dialog class="cart-dialog" id="cartDialog" aria-labelledby="cartTitle">
+    <div class="cart-shell">
+      <header class="cart-head">
+        <div>
+          <p class="eyebrow">Online order</p>
+          <h2 id="cartTitle">Your cart</h2>
+        </div>
+        <button class="cart-close" id="cartClose" type="button" aria-label="Close shopping cart">×</button>
+      </header>
+
+      <ol class="checkout-progress" id="checkoutProgress" aria-label="Checkout progress">
+        <li data-step="1"><span>1</span><b>Cart</b></li>
+        <li data-step="2"><span>2</span><b>Details</b></li>
+        <li data-step="3"><span>3</span><b>Payment</b></li>
+        <li data-step="4"><span>4</span><b>Confirm</b></li>
+      </ol>
+
+      <div class="cart-body">
+        <section class="checkout-panel" data-panel="1">
+          <div class="cart-items" id="cartItems"></div>
+          <div class="cart-empty" id="cartEmpty" hidden>
+            <span aria-hidden="true">🛒</span>
+            <h3>Your cart is empty</h3>
+            <p>Choose a dish from the menu to begin your order.</p>
+            <button class="button button-green" id="cartBrowse" type="button">Browse menu</button>
+          </div>
+          <label class="order-note" for="orderNote"><span>Order notes</span><textarea id="orderNote" rows="2" maxlength="300" placeholder="Anything the restaurant should know?"></textarea></label>
+        </section>
+
+        <section class="checkout-panel" data-panel="2" hidden>
+          <fieldset class="fulfilment-choice">
+            <legend>How would you like your order?</legend>
+            <label><input type="radio" name="fulfilment" value="pickup" checked><span><b>Pickup</b><small>Collect from Banafseg branch</small></span></label>
+            <label><input type="radio" name="fulfilment" value="delivery"><span><b>Delivery</b><small>Fee confirmed by the restaurant</small></span></label>
+          </fieldset>
+          <div class="checkout-fields">
+            <label><span>Name</span><input id="customerName" autocomplete="name" maxlength="80" required></label>
+            <label><span>Egyptian mobile number</span><input id="customerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required></label>
+            <div class="pickup-fields" id="pickupFields">
+              <label><span>Branch</span><select id="pickupBranch"><option value="Banafseg, First Settlement">Banafseg, First Settlement</option></select></label>
+              <label><span>Pickup time</span><select id="pickupTime"><option value="As soon as possible">As soon as possible</option><option value="In 30 minutes">In 30 minutes</option><option value="In 45 minutes">In 45 minutes</option><option value="In 60 minutes">In 60 minutes</option></select></label>
+            </div>
+            <div class="delivery-fields" id="deliveryFields" hidden>
+              <label><span>Area</span><input id="deliveryArea" maxlength="80" placeholder="Area / district"></label>
+              <label class="field-wide"><span>Street and building</span><input id="deliveryStreet" maxlength="140" placeholder="Street, building number"></label>
+              <label><span>Floor</span><input id="deliveryFloor" maxlength="20"></label>
+              <label><span>Apartment</span><input id="deliveryApartment" maxlength="20"></label>
+              <label class="field-wide"><span>Landmark</span><input id="deliveryLandmark" maxlength="120"></label>
+              <label class="field-wide"><span>Google Maps link (optional)</span><input id="deliveryMap" type="url" inputmode="url" placeholder="https://maps.google.com/..."></label>
+            </div>
+          </div>
+          <p class="hours-notice" id="hoursNotice">Orders are accepted during restaurant hours: daily 9:00 AM–4:00 AM.</p>
+          <p class="form-error" id="checkoutError" role="alert" hidden></p>
+        </section>
+
+        <section class="checkout-panel" data-panel="3" hidden>
+          <fieldset class="payment-choice">
+            <legend>Payment method</legend>
+            <label><input type="radio" name="payment" value="Cash" checked><span><b>Cash</b><small>Pay on delivery or pickup</small></span></label>
+            <label><input type="radio" name="payment" value="Card on collection"><span><b>Card at the restaurant</b><small>Available for pickup only; confirmation required</small></span></label>
+          </fieldset>
+          <div class="checkout-safety"><b>No online card details are collected.</b><p>The restaurant confirms availability, delivery fee, and payment method on WhatsApp.</p></div>
+        </section>
+
+        <section class="checkout-panel" data-panel="4" hidden>
+          <div class="order-review" id="orderReview"></div>
+          <label class="confirm-check"><input id="confirmAccuracy" type="checkbox"><span>I checked my order and contact details.</span></label>
+          <p class="privacy-note">Your order details will open in WhatsApp for you to review and send to Khan Al Harir. They are not stored by this website.</p>
+          <p class="form-error" id="confirmError" role="alert" hidden></p>
+        </section>
+
+        <section class="checkout-success" id="checkoutSuccess" hidden>
+          <span class="success-mark" aria-hidden="true">✓</span>
+          <p class="eyebrow">Order prepared</p>
+          <h3>Send it to the restaurant</h3>
+          <p id="successOrderNumber"></p>
+          <p>Your order is not received until you press Send in WhatsApp and the restaurant confirms it.</p>
+          <a class="button button-green" id="whatsappOrderLink" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>
+        </section>
+      </div>
+
+      <footer class="cart-foot" id="cartFoot">
+        <div class="cart-total"><span>Total</span><strong id="cartTotal">0 EGP</strong><small id="deliveryFeeNote"></small></div>
+        <div class="cart-actions"><button class="button button-outline" id="checkoutBack" type="button" hidden>Back</button><button class="button button-orange" id="checkoutNext" type="button">Continue</button></div>
+      </footer>
     </div>
   </dialog>
 

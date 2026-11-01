@@ -818,6 +818,8 @@ function setLanguage(language, persist = true) {
     if (openItem) populateMenuDetail(openItem);
   }
   if (lightbox.open) updateLightbox(galleryIndex);
+  updateCartLanguage();
+  renderCart();
   if (persist) {
     try { localStorage.setItem("khan-language", currentLanguage); } catch (_) { /* optional preference */ }
   }
@@ -1127,6 +1129,7 @@ function populateMenuDetail(item) {
   menuDetailSecondary.lang = isArabic ? "en" : "ar";
   menuDetailSecondary.dir = isArabic ? "ltr" : "rtl";
   menuDetailDescription.textContent = description;
+  menuItemNote.value = "";
   renderMenuCustomizations(item);
   if (item.customizationGroups?.length) {
     menuDetailPriceLabel.textContent = isArabic ? "الإجمالي حسب اختياراتك" : "Total with your selections";
@@ -1175,6 +1178,343 @@ menuDetail.addEventListener("close", () => {
   menuDetailOpener?.focus({ preventScroll: true });
   menuDetailItemId = null;
 });
+
+// Shopping cart and four-step WhatsApp checkout. The browser stores the draft;
+// final submission remains customer-controlled until production order storage is connected.
+const CART_STORAGE_KEY = "khan-cart-v1";
+const CUSTOMER_STORAGE_KEY = "khan-customer-v1";
+const RESTAURANT_WHATSAPP = "201050714404";
+const cartDialog = document.getElementById("cartDialog");
+const cartTrigger = document.getElementById("cartTrigger");
+const cartCount = document.getElementById("cartCount");
+const cartItems = document.getElementById("cartItems");
+const cartEmpty = document.getElementById("cartEmpty");
+const cartTotal = document.getElementById("cartTotal");
+const cartFoot = document.getElementById("cartFoot");
+const checkoutBack = document.getElementById("checkoutBack");
+const checkoutNext = document.getElementById("checkoutNext");
+const checkoutError = document.getElementById("checkoutError");
+const confirmError = document.getElementById("confirmError");
+const deliveryFields = document.getElementById("deliveryFields");
+const pickupFields = document.getElementById("pickupFields");
+const deliveryFeeNote = document.getElementById("deliveryFeeNote");
+const menuItemNote = document.getElementById("menuItemNote");
+let checkoutStep = 1;
+let cart = readStoredJSON(CART_STORAGE_KEY, []);
+if (!Array.isArray(cart)) cart = [];
+
+function readStoredJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; }
+}
+
+function saveCart() {
+  try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); } catch (_) { /* storage is optional */ }
+}
+
+function cartQuantity() { return cart.reduce((sum, line) => sum + line.quantity, 0); }
+function cartSubtotal() { return cart.reduce((sum, line) => sum + (line.unitPrice * line.quantity), 0); }
+
+function collectSelection(item) {
+  let unitPrice = Number.isFinite(item.price) ? item.price : 0;
+  let additions = 0;
+  const selections = [];
+  menuDetailOptions.querySelectorAll("input:checked").forEach(input => {
+    if (input.value === "none") return;
+    const group = item.customizationGroups?.[Number(input.dataset.groupIndex)];
+    const value = group?.values?.find(option => String(option.id) === input.value);
+    if (!group || !value) return;
+    const price = Number(value.price) || 0;
+    if (group.overridePrice) unitPrice = price;
+    else additions += price;
+    selections.push({
+      group: group.label, groupAr: group.labelAr,
+      label: value.label, labelAr: value.labelAr,
+      price, overridePrice: Boolean(group.overridePrice)
+    });
+  });
+  return { selections, unitPrice: unitPrice + additions };
+}
+
+function addCurrentItemToCart() {
+  const item = menuItems.find(candidate => candidate.id === menuDetailItemId);
+  if (!item) return;
+  const { selections, unitPrice } = collectSelection(item);
+  if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+    menuDetailPriceLabel.textContent = currentLanguage === "ar" ? "لا يمكن طلب هذا الصنف حاليًا" : "This item cannot be ordered right now";
+    return;
+  }
+  const note = menuItemNote.value.trim();
+  const signature = JSON.stringify([item.id, selections.map(selection => [selection.group, selection.label]), note]);
+  const existing = cart.find(line => line.signature === signature);
+  if (existing) existing.quantity += 1;
+  else cart.push({
+    signature, itemId: item.id, name: item.name, arabic: item.arabic, image: item.image,
+    unitPrice, selections, note, quantity: 1
+  });
+  saveCart();
+  renderCart();
+  menuDetail.close();
+  window.setTimeout(() => openCart(1), 0);
+}
+
+function cartLineMarkup(line, index) {
+  const isArabic = currentLanguage === "ar";
+  const name = isArabic ? line.arabic : line.name;
+  const selections = line.selections.map(selection => isArabic ? selection.labelAr : selection.label).filter(Boolean).join("، ");
+  const meta = [selections, line.note ? `${isArabic ? "ملاحظة" : "Note"}: ${line.note}` : ""].filter(Boolean).join(" · ");
+  return `<article class="cart-line" data-cart-index="${index}">
+    <img src="${escapeHTML(line.image)}" alt="" width="72" height="72">
+    <div class="cart-line-copy">
+      <div class="cart-line-title"><b>${escapeHTML(name)}</b><strong>${formatCurrency(line.unitPrice * line.quantity)}</strong></div>
+      ${meta ? `<p class="cart-line-meta">${escapeHTML(meta)}</p>` : ""}
+      <div class="cart-line-actions">
+        <div class="quantity-control" aria-label="${isArabic ? "الكمية" : "Quantity"}"><button type="button" data-cart-action="decrease" aria-label="${isArabic ? "تقليل الكمية" : "Decrease quantity"}">−</button><span>${line.quantity}</span><button type="button" data-cart-action="increase" aria-label="${isArabic ? "زيادة الكمية" : "Increase quantity"}">+</button></div>
+        <button class="cart-remove" type="button" data-cart-action="remove">${isArabic ? "حذف" : "Remove"}</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderCart() {
+  if (!cartItems) return;
+  cartCount.textContent = String(cartQuantity());
+  cartItems.innerHTML = cart.map(cartLineMarkup).join("");
+  const empty = cart.length === 0;
+  cartEmpty.hidden = !empty;
+  document.getElementById("orderNote").hidden = empty;
+  document.querySelector(".order-note").hidden = empty;
+  cartTotal.textContent = formatCurrency(cartSubtotal());
+  deliveryFeeNote.textContent = document.querySelector('input[name="fulfilment"]:checked')?.value === "delivery"
+    ? (currentLanguage === "ar" ? "رسوم التوصيل يؤكدها المطعم" : "Delivery fee confirmed by restaurant") : "";
+  if (checkoutStep === 4) renderOrderReview();
+}
+
+function setCheckoutStep(step) {
+  checkoutStep = Math.max(1, Math.min(4, step));
+  document.querySelectorAll(".checkout-panel").forEach(panel => { panel.hidden = Number(panel.dataset.panel) !== checkoutStep; });
+  document.getElementById("checkoutSuccess").hidden = true;
+  cartFoot.hidden = false;
+  document.querySelectorAll("#checkoutProgress li").forEach(item => {
+    const number = Number(item.dataset.step);
+    item.classList.toggle("is-active", number === checkoutStep);
+    item.classList.toggle("is-done", number < checkoutStep);
+  });
+  checkoutBack.hidden = checkoutStep === 1;
+  checkoutNext.textContent = checkoutStep === 4
+    ? (currentLanguage === "ar" ? "تأكيد وفتح واتساب" : "Confirm & open WhatsApp")
+    : (currentLanguage === "ar" ? "متابعة" : "Continue");
+  checkoutError.hidden = true;
+  confirmError.hidden = true;
+  if (checkoutStep === 4) renderOrderReview();
+}
+
+function openCart(step = checkoutStep) {
+  setCheckoutStep(step);
+  if (!cartDialog.open) cartDialog.showModal();
+  document.body.classList.add("is-locked");
+}
+
+function selectedFulfilment() { return document.querySelector('input[name="fulfilment"]:checked')?.value || "pickup"; }
+function selectedPayment() { return document.querySelector('input[name="payment"]:checked')?.value || "Cash"; }
+
+function customerData() {
+  return {
+    name: document.getElementById("customerName").value.trim(),
+    phone: document.getElementById("customerPhone").value.trim(),
+    fulfilment: selectedFulfilment(), branch: document.getElementById("pickupBranch").value,
+    pickupTime: document.getElementById("pickupTime").value,
+    area: document.getElementById("deliveryArea").value.trim(), street: document.getElementById("deliveryStreet").value.trim(),
+    floor: document.getElementById("deliveryFloor").value.trim(), apartment: document.getElementById("deliveryApartment").value.trim(),
+    landmark: document.getElementById("deliveryLandmark").value.trim(), map: document.getElementById("deliveryMap").value.trim(),
+    payment: selectedPayment(), orderNote: document.getElementById("orderNote").value.trim()
+  };
+}
+
+function saveCustomerDraft() {
+  try { localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(customerData())); } catch (_) { /* optional */ }
+}
+
+function validEgyptianPhone(value) {
+  const digits = value.replace(/\D/g, "").replace(/^20/, "0");
+  return /^01[0125]\d{8}$/.test(digits);
+}
+
+function validateDetails() {
+  const data = customerData();
+  let message = "";
+  if (!data.name) message = currentLanguage === "ar" ? "اكتب اسمك من فضلك." : "Please enter your name.";
+  else if (!validEgyptianPhone(data.phone)) message = currentLanguage === "ar" ? "اكتب رقم موبايل مصري صحيحًا من 11 رقمًا." : "Enter a valid 11-digit Egyptian mobile number.";
+  else if (data.fulfilment === "delivery" && (!data.area || !data.street)) message = currentLanguage === "ar" ? "اكتب المنطقة والشارع ورقم العمارة للتوصيل." : "Enter the delivery area, street, and building number.";
+  checkoutError.textContent = message;
+  checkoutError.hidden = !message;
+  if (!message) saveCustomerDraft();
+  return !message;
+}
+
+function isRestaurantOpenNow() {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const hour = Number(parts.find(part => part.type === "hour")?.value || 0);
+  const minute = Number(parts.find(part => part.type === "minute")?.value || 0);
+  const time = hour * 60 + minute;
+  return time >= 9 * 60 || time <= 4 * 60;
+}
+
+function renderOrderReview() {
+  const data = customerData();
+  const isArabic = currentLanguage === "ar";
+  const list = cart.map(line => {
+    const name = isArabic ? line.arabic : line.name;
+    const extras = line.selections.map(selection => isArabic ? selection.labelAr : selection.label).filter(Boolean).join("، ");
+    return `<li><b>${line.quantity} × ${escapeHTML(name)}</b> — ${formatCurrency(line.unitPrice * line.quantity)}${extras ? `<br><small>${escapeHTML(extras)}</small>` : ""}</li>`;
+  }).join("");
+  const deliveryAddress = [data.area, data.street, data.floor && `${isArabic ? "الدور" : "Floor"} ${data.floor}`, data.apartment && `${isArabic ? "شقة" : "Apt"} ${data.apartment}`, data.landmark].filter(Boolean).join("، ");
+  document.getElementById("orderReview").innerHTML = `
+    <div class="review-block"><h3>${isArabic ? "الطلب" : "Order"}</h3><ul>${list}</ul></div>
+    <div class="review-block"><h3>${isArabic ? "الاستلام" : "Fulfilment"}</h3><p>${data.fulfilment === "delivery" ? (isArabic ? `توصيل: ${escapeHTML(deliveryAddress)}` : `Delivery: ${escapeHTML(deliveryAddress)}`) : (isArabic ? `استلام من ${escapeHTML(data.branch)} — ${escapeHTML(data.pickupTime)}` : `Pickup from ${escapeHTML(data.branch)} — ${escapeHTML(data.pickupTime)}`)}</p></div>
+    <div class="review-block"><h3>${isArabic ? "العميل والدفع" : "Customer & payment"}</h3><p>${escapeHTML(data.name)} · ${escapeHTML(data.phone)}<br>${escapeHTML(data.payment)}</p></div>
+    <div class="review-total"><span>${isArabic ? "إجمالي الأصناف" : "Items total"}</span><strong>${formatCurrency(cartSubtotal())}</strong></div>
+    ${data.fulfilment === "delivery" ? `<p class="hours-notice">${isArabic ? "رسوم التوصيل والإجمالي النهائي يؤكدهما المطعم على واتساب." : "The restaurant confirms the delivery fee and final total on WhatsApp."}</p>` : ""}`;
+}
+
+function createOrderNumber() {
+  return `KH-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+}
+
+function buildWhatsAppMessage(orderNumber) {
+  const data = customerData();
+  const isArabic = currentLanguage === "ar";
+  const lines = cart.map(line => {
+    const name = isArabic ? line.arabic : line.name;
+    const extras = line.selections.map(selection => isArabic ? selection.labelAr : selection.label).filter(Boolean).join("، ");
+    return `- ${line.quantity} × ${name}${extras ? ` (${extras})` : ""} = ${formatCurrency(line.unitPrice * line.quantity)}${line.note ? `\n  ${isArabic ? "ملاحظة" : "Note"}: ${line.note}` : ""}`;
+  }).join("\n");
+  const address = [data.area, data.street, data.floor && `${isArabic ? "الدور" : "Floor"} ${data.floor}`, data.apartment && `${isArabic ? "شقة" : "Apt"} ${data.apartment}`, data.landmark].filter(Boolean).join("، ");
+  const now = new Intl.DateTimeFormat(isArabic ? "ar-EG" : "en-EG", { timeZone: "Africa/Cairo", dateStyle: "medium", timeStyle: "short" }).format(new Date());
+  if (isArabic) return `🔔 طلب جديد #${orderNumber}\n📦 النوع: ${data.fulfilment === "delivery" ? "توصيل 🛵" : "استلام من المطعم 🏪"}\n${data.fulfilment === "delivery" ? `📍 العنوان: ${address}\n${data.map ? `🗺️ الموقع: ${data.map}\n` : ""}🚚 رسوم التوصيل: يؤكدها المطعم\n` : `🏬 الفرع: ${data.branch}\n🕐 وقت الاستلام: ${data.pickupTime}\n`}👤 الاسم: ${data.name}\n📞 الموبايل: ${data.phone}\n🍽️ الطلب:\n${lines}\n${data.orderNote ? `📝 ملاحظات الطلب: ${data.orderNote}\n` : ""}💰 إجمالي الأصناف: ${formatCurrency(cartSubtotal())}\n💳 الدفع: ${data.payment}\n🕐 وقت الطلب: ${now}\n\nيرجى تأكيد الطلب${data.fulfilment === "delivery" ? " ورسوم التوصيل والإجمالي النهائي" : " ووقت الاستلام"}.`;
+  return `🔔 New order #${orderNumber}\n📦 Type: ${data.fulfilment === "delivery" ? "Delivery 🛵" : "Restaurant pickup 🏪"}\n${data.fulfilment === "delivery" ? `📍 Address: ${address}\n${data.map ? `🗺️ Location: ${data.map}\n` : ""}🚚 Delivery fee: restaurant to confirm\n` : `🏬 Branch: ${data.branch}\n🕐 Pickup time: ${data.pickupTime}\n`}👤 Name: ${data.name}\n📞 Mobile: ${data.phone}\n🍽️ Order:\n${lines}\n${data.orderNote ? `📝 Order notes: ${data.orderNote}\n` : ""}💰 Items total: ${formatCurrency(cartSubtotal())}\n💳 Payment: ${data.payment}\n🕐 Ordered: ${now}\n\nPlease confirm the order${data.fulfilment === "delivery" ? ", delivery fee, and final total" : " and pickup time"}.`;
+}
+
+function confirmOrder() {
+  if (!document.getElementById("confirmAccuracy").checked) {
+    confirmError.textContent = currentLanguage === "ar" ? "أكد أنك راجعت الطلب وبيانات التواصل." : "Please confirm that you reviewed the order and contact details.";
+    confirmError.hidden = false;
+    return;
+  }
+  if (!isRestaurantOpenNow()) {
+    confirmError.textContent = currentLanguage === "ar" ? "المطعم مغلق الآن. مواعيد استقبال الطلبات يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "The restaurant is currently closed. Orders are accepted daily from 9:00 AM to 4:00 AM.";
+    confirmError.hidden = false;
+    return;
+  }
+  checkoutNext.disabled = true;
+  const orderNumber = createOrderNumber();
+  const url = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(buildWhatsAppMessage(orderNumber))}`;
+  const link = document.getElementById("whatsappOrderLink");
+  link.href = url;
+  link.textContent = currentLanguage === "ar" ? "فتح واتساب وإرسال الطلب" : "Open WhatsApp and send order";
+  document.getElementById("successOrderNumber").textContent = currentLanguage === "ar" ? `رقم الطلب: ${orderNumber}` : `Order number: ${orderNumber}`;
+  document.querySelectorAll(".checkout-panel").forEach(panel => { panel.hidden = true; });
+  document.getElementById("checkoutSuccess").hidden = false;
+  cartFoot.hidden = true;
+  checkoutNext.disabled = false;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function updateFulfilmentFields() {
+  const delivery = selectedFulfilment() === "delivery";
+  deliveryFields.hidden = !delivery;
+  pickupFields.hidden = delivery;
+  document.querySelector('input[name="payment"][value="Card on collection"]').closest("label").hidden = delivery;
+  if (delivery && selectedPayment() === "Card on collection") document.querySelector('input[name="payment"][value="Cash"]').checked = true;
+  renderCart();
+}
+
+function updateCartLanguage() {
+  if (!cartDialog) return;
+  const ar = currentLanguage === "ar";
+  cartTrigger.setAttribute("aria-label", ar ? "فتح عربة التسوق" : "Open shopping cart");
+  cartTrigger.querySelector(".cart-trigger-label").textContent = ar ? "السلة" : "Cart";
+  document.querySelector("#cartTitle").textContent = ar ? "عربة التسوق" : "Your cart";
+  document.querySelector(".cart-head .eyebrow").textContent = ar ? "طلب أونلاين" : "Online order";
+  document.getElementById("cartClose").setAttribute("aria-label", ar ? "إغلاق عربة التسوق" : "Close shopping cart");
+  const progress = ar ? ["السلة", "البيانات", "الدفع", "التأكيد"] : ["Cart", "Details", "Payment", "Confirm"];
+  document.querySelectorAll("#checkoutProgress b").forEach((element, index) => { element.textContent = progress[index]; });
+  document.getElementById("menuAddToCart").textContent = ar ? "أضف للسلة" : "Add to cart";
+  document.querySelector(".item-note > span").textContent = ar ? "طلب خاص" : "Special request";
+  menuItemNote.placeholder = ar ? "مثال: بدون بصل" : "For example: no onions";
+  document.querySelector("#cartEmpty h3").textContent = ar ? "السلة فارغة" : "Your cart is empty";
+  document.querySelector("#cartEmpty p").textContent = ar ? "اختر طبقًا من المنيو لبدء طلبك." : "Choose a dish from the menu to begin your order.";
+  document.getElementById("cartBrowse").textContent = ar ? "تصفح المنيو" : "Browse menu";
+  document.querySelector(".order-note > span").textContent = ar ? "ملاحظات الطلب" : "Order notes";
+  document.getElementById("orderNote").placeholder = ar ? "أي شيء يجب أن يعرفه المطعم؟" : "Anything the restaurant should know?";
+  document.querySelector(".fulfilment-choice legend").textContent = ar ? "كيف تريد استلام طلبك؟" : "How would you like your order?";
+  const fulfilmentLabels = document.querySelectorAll(".fulfilment-choice label");
+  fulfilmentLabels[0].querySelector("b").textContent = ar ? "استلام من المطعم" : "Pickup";
+  fulfilmentLabels[0].querySelector("small").textContent = ar ? "الاستلام من فرع البنفسج" : "Collect from Banafseg branch";
+  fulfilmentLabels[1].querySelector("b").textContent = ar ? "توصيل" : "Delivery";
+  fulfilmentLabels[1].querySelector("small").textContent = ar ? "الرسوم يؤكدها المطعم" : "Fee confirmed by the restaurant";
+  const fieldLabels = ar
+    ? ["الاسم", "رقم الموبايل المصري", "الفرع", "وقت الاستلام", "المنطقة", "الشارع ورقم العمارة", "الدور", "الشقة", "علامة مميزة", "رابط Google Maps (اختياري)"]
+    : ["Name", "Egyptian mobile number", "Branch", "Pickup time", "Area", "Street and building", "Floor", "Apartment", "Landmark", "Google Maps link (optional)"];
+  document.querySelectorAll(".checkout-fields label > span").forEach((element, index) => { element.textContent = fieldLabels[index]; });
+  document.getElementById("deliveryArea").placeholder = ar ? "المنطقة / الحي" : "Area / district";
+  document.getElementById("deliveryStreet").placeholder = ar ? "الشارع، رقم العمارة" : "Street, building number";
+  document.getElementById("hoursNotice").textContent = ar ? "تُستقبل الطلبات خلال مواعيد العمل: يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "Orders are accepted during restaurant hours: daily 9:00 AM–4:00 AM.";
+  document.querySelector(".payment-choice legend").textContent = ar ? "طريقة الدفع" : "Payment method";
+  const paymentLabels = document.querySelectorAll(".payment-choice label");
+  paymentLabels[0].querySelector("b").textContent = ar ? "نقدًا" : "Cash";
+  paymentLabels[0].querySelector("small").textContent = ar ? "الدفع عند التوصيل أو الاستلام" : "Pay on delivery or pickup";
+  paymentLabels[1].querySelector("b").textContent = ar ? "بطاقة في المطعم" : "Card at the restaurant";
+  paymentLabels[1].querySelector("small").textContent = ar ? "للاستلام فقط وبعد التأكيد" : "Available for pickup only; confirmation required";
+  document.querySelector(".checkout-safety b").textContent = ar ? "لا نجمع بيانات بطاقات على الموقع." : "No online card details are collected.";
+  document.querySelector(".checkout-safety p").textContent = ar ? "يؤكد المطعم التوفر ورسوم التوصيل وطريقة الدفع عبر واتساب." : "The restaurant confirms availability, delivery fee, and payment method on WhatsApp.";
+  document.querySelector(".confirm-check span").textContent = ar ? "راجعت الطلب وبيانات التواصل." : "I checked my order and contact details.";
+  document.querySelector(".privacy-note").textContent = ar ? "ستُفتح تفاصيل طلبك في واتساب لتراجعها وترسلها إلى خان الحرير. لا يخزنها هذا الموقع." : "Your order details will open in WhatsApp for you to review and send to Khan Al Harir. They are not stored by this website.";
+  document.querySelector("#checkoutSuccess .eyebrow").textContent = ar ? "الطلب جاهز للإرسال" : "Order prepared";
+  document.querySelector("#checkoutSuccess h3").textContent = ar ? "أرسله إلى المطعم" : "Send it to the restaurant";
+  document.querySelectorAll("#checkoutSuccess p")[2].textContent = ar ? "لا يصل الطلب إلى المطعم حتى تضغط إرسال في واتساب ويؤكده المطعم." : "Your order is not received until you press Send in WhatsApp and the restaurant confirms it.";
+  document.querySelector(".cart-total > span").textContent = ar ? "الإجمالي" : "Total";
+  setCheckoutStep(checkoutStep);
+}
+
+document.getElementById("menuAddToCart").addEventListener("click", addCurrentItemToCart);
+cartTrigger.addEventListener("click", () => openCart(1));
+document.getElementById("cartClose").addEventListener("click", () => cartDialog.close());
+document.getElementById("cartBrowse").addEventListener("click", () => { cartDialog.close(); document.getElementById("menu").scrollIntoView({ behavior: "smooth" }); });
+cartDialog.addEventListener("click", event => { if (event.target === cartDialog) cartDialog.close(); });
+cartDialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
+cartItems.addEventListener("click", event => {
+  const button = event.target.closest("button[data-cart-action]");
+  const lineElement = event.target.closest("[data-cart-index]");
+  if (!button || !lineElement) return;
+  const index = Number(lineElement.dataset.cartIndex);
+  const action = button.dataset.cartAction;
+  if (action === "increase") cart[index].quantity += 1;
+  if (action === "decrease") cart[index].quantity -= 1;
+  if (action === "remove" || cart[index].quantity <= 0) cart.splice(index, 1);
+  saveCart(); renderCart();
+});
+document.querySelectorAll('input[name="fulfilment"]').forEach(input => input.addEventListener("change", updateFulfilmentFields));
+document.querySelectorAll("#customerName, #customerPhone, #pickupBranch, #pickupTime, #deliveryArea, #deliveryStreet, #deliveryFloor, #deliveryApartment, #deliveryLandmark, #deliveryMap, #orderNote").forEach(input => input.addEventListener("change", saveCustomerDraft));
+checkoutBack.addEventListener("click", () => setCheckoutStep(checkoutStep - 1));
+checkoutNext.addEventListener("click", () => {
+  if (checkoutStep === 1) {
+    if (!cart.length) return;
+    setCheckoutStep(2);
+  } else if (checkoutStep === 2) {
+    if (validateDetails()) setCheckoutStep(3);
+  } else if (checkoutStep === 3) setCheckoutStep(4);
+  else confirmOrder();
+});
+
+const savedCustomer = readStoredJSON(CUSTOMER_STORAGE_KEY, {});
+Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, pickupTime: savedCustomer.pickupTime, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map, orderNote: savedCustomer.orderNote }).forEach(([id, value]) => {
+  if (value && document.getElementById(id)) document.getElementById(id).value = value;
+});
+if (savedCustomer.fulfilment) {
+  const input = document.querySelector(`input[name="fulfilment"][value="${savedCustomer.fulfilment}"]`);
+  if (input) input.checked = true;
+}
+updateFulfilmentFields();
 
 document.querySelectorAll("[data-category-link]").forEach(button => {
   button.addEventListener("click", () => chooseCategory(button.dataset.categoryLink, true));
