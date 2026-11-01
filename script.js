@@ -7,6 +7,8 @@
   public QR menu. The legacy list below is retained only as a photography reference.
 */
 const PAGE_SIZE = 12;
+const MENU_REFRESH_INTERVAL_MS = 2 * 60 * 1000;
+const MENU_REFRESH_MIN_GAP_MS = 30 * 1000;
 
 let menuCategories = [
   { id: "offers", label: "Offers", ar: "العروض" },
@@ -358,6 +360,9 @@ const arabicMenuDescriptions = {
 
 let menuLoadState = "loading";
 let failedCategoryCount = 0;
+let lastMenuRefreshAt = 0;
+let lastMenuSignature = "";
+let menuRefreshInFlight = false;
 
 function categorySlug(category) {
   const english = category?.title?.en || `category-${category?.id || "menu"}`;
@@ -423,6 +428,17 @@ function productToMenuItem(product, category) {
   };
 }
 
+function officialMenuSignature(items) {
+  return JSON.stringify(items.map(item => [
+    item.id,
+    item.price,
+    item.oldPrice,
+    item.priceMin,
+    item.priceMax,
+    item.priceOptions.map(option => [option.label, option.labelAr, option.price])
+  ]));
+}
+
 function updateMenuSourceMessage() {
   const element = document.getElementById("menuSource");
   if (!element) return;
@@ -439,7 +455,8 @@ async function fetchJSON(url) {
   return payload.data;
 }
 
-async function loadOfficialMenu() {
+async function loadOfficialMenu({ preserveView = false } = {}) {
+  if (menuRefreshInFlight) return;
   const { apiBase, branchId } = menuSource;
   if (!apiBase || !branchId) {
     menuLoadState = "error";
@@ -448,7 +465,11 @@ async function loadOfficialMenu() {
     return;
   }
 
+  menuRefreshInFlight = true;
+  lastMenuRefreshAt = Date.now();
   try {
+    const previousCategory = state.category;
+    const previousVisible = state.visible;
     const categories = await fetchJSON(`${apiBase}/branches/${branchId}/categories`);
     menuCategories = categories.map(category => ({
       id: categorySlug(category),
@@ -475,19 +496,35 @@ async function loadOfficialMenu() {
     }
 
     if (!loadedItems.length) throw new Error("The official menu returned no products");
+    const nextSignature = officialMenuSignature(loadedItems);
+    const menuChanged = nextSignature !== lastMenuSignature;
     menuItems = loadedItems;
+    lastMenuSignature = nextSignature;
     menuLoadState = "loaded";
-    state.category = "all";
-    state.visible = PAGE_SIZE;
+    state.category = preserveView && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
+      ? previousCategory
+      : "all";
+    state.visible = preserveView ? Math.max(PAGE_SIZE, previousVisible) : PAGE_SIZE;
     updateMenuSourceMessage();
-    renderMenu();
+    if (menuChanged || !preserveView) renderMenu();
   } catch (error) {
+    if (preserveView && menuItems.length) {
+      console.warn("Official menu background refresh failed", error);
+      return;
+    }
     console.error("Official menu load failed", error);
     menuItems = [];
     menuLoadState = "error";
     updateMenuSourceMessage();
     renderMenu();
+  } finally {
+    menuRefreshInFlight = false;
   }
+}
+
+function refreshOfficialMenuIfStale() {
+  if (Date.now() - lastMenuRefreshAt < MENU_REFRESH_MIN_GAP_MS) return;
+  loadOfficialMenu({ preserveView: true });
 }
 
 function preferredLanguage() {
@@ -980,4 +1017,9 @@ document.getElementById("year").textContent = new Date().getFullYear();
 initializeStaticTranslations();
 setLanguage(currentLanguage, false);
 loadOfficialMenu();
+window.setInterval(refreshOfficialMenuIfStale, MENU_REFRESH_INTERVAL_MS);
+window.addEventListener("focus", refreshOfficialMenuIfStale);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshOfficialMenuIfStale();
+});
 
