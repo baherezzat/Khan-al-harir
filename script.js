@@ -9,6 +9,9 @@
 const PAGE_SIZE = 12;
 const MENU_REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 const MENU_REFRESH_MIN_GAP_MS = 30 * 1000;
+const MENU_CACHE_KEY = "khan-official-menu-v1";
+const MENU_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const MENU_REQUEST_RETRIES = 2;
 
 let menuCategories = [
   { id: "offers", label: "Offers", ar: "العروض" },
@@ -447,12 +450,87 @@ function updateMenuSourceMessage() {
     : "Halaby cuisine is a story of timeless flavors and generous tables that bring loved ones together.";
 }
 
+function readOfficialMenuCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(MENU_CACHE_KEY) || "null");
+    if (!cached || !Array.isArray(cached.categories) || !Array.isArray(cached.items)) return null;
+    if (!cached.categories.length || !cached.items.length) return null;
+    if (!Number.isFinite(cached.savedAt) || Date.now() - cached.savedAt > MENU_CACHE_MAX_AGE_MS) return null;
+    return cached;
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeOfficialMenuCache(categories, items) {
+  try {
+    localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      categories: categories.map(({ id, label, ar, sourceId }) => ({ id, label, ar, sourceId })),
+      items
+    }));
+  } catch (_) {
+    // A full menu still works when storage is disabled or full.
+  }
+}
+
+function applyOfficialMenu(categories, items, { preserveView = false } = {}) {
+  const previousCategory = state.category;
+  const previousVisible = state.visible;
+  menuCategories = categories;
+  categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
+  categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
+  menuItems = items;
+  lastMenuSignature = officialMenuSignature(items);
+  menuLoadState = "loaded";
+  state.category = preserveView && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
+    ? previousCategory
+    : "all";
+  state.visible = preserveView ? Math.max(PAGE_SIZE, previousVisible) : PAGE_SIZE;
+}
+
+function wait(milliseconds) {
+  return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+}
+
 async function fetchJSON(url) {
-  const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`Menu request failed (${response.status})`);
-  const payload = await response.json();
-  if (!payload?.status) throw new Error(payload?.msg || "Menu response was not successful");
-  return payload.data;
+  let lastError;
+  for (let attempt = 0; attempt <= MENU_REQUEST_RETRIES; attempt += 1) {
+    try {
+      const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        const retryable = response.status === 429 || response.status >= 500;
+        if (!retryable || attempt === MENU_REQUEST_RETRIES) throw new Error(`Menu request failed (${response.status})`);
+        const retryAfterHeader = response.headers.get("Retry-After");
+        const retryAfterSeconds = retryAfterHeader === null ? NaN : Number(retryAfterHeader);
+        const retryDelay = Number.isFinite(retryAfterSeconds)
+          ? Math.min(retryAfterSeconds * 1000, 5000)
+          : 600 * (2 ** attempt);
+        await wait(retryDelay);
+        continue;
+      }
+      const payload = await response.json();
+      if (!payload?.status) throw new Error(payload?.msg || "Menu response was not successful");
+      return payload.data;
+    } catch (error) {
+      lastError = error;
+      if (attempt === MENU_REQUEST_RETRIES) break;
+      await wait(600 * (2 ** attempt));
+    }
+  }
+  throw lastError || new Error("Menu request failed");
+}
+
+async function fetchOfficialMenuBundle(apiBase, branchId) {
+  try {
+    const bundle = await fetchJSON("/api/menu");
+    if (Array.isArray(bundle?.categories) && bundle.categories.length) return bundle.categories;
+  } catch (_) {
+    // Fall back to the official public API if the shared cache is unavailable.
+  }
+
+  const categories = await fetchJSON(`${apiBase}/branches/${branchId}/categories`);
+  return categories.map(category => ({ ...category, products: null }));
 }
 
 async function loadOfficialMenu({ preserveView = false } = {}) {
@@ -467,48 +545,56 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
 
   menuRefreshInFlight = true;
   lastMenuRefreshAt = Date.now();
+  const cachedMenu = readOfficialMenuCache();
+  if (!menuItems.length && cachedMenu) {
+    applyOfficialMenu(cachedMenu.categories, cachedMenu.items, { preserveView });
+    updateMenuSourceMessage();
+    renderMenu();
+    preserveView = true;
+  }
   try {
-    const previousCategory = state.category;
-    const previousVisible = state.visible;
-    const categories = await fetchJSON(`${apiBase}/branches/${branchId}/categories`);
-    menuCategories = categories.map(category => ({
+    const categories = await fetchOfficialMenuBundle(apiBase, branchId);
+    const nextCategories = categories.map(category => ({
       id: categorySlug(category),
       label: category.title?.en || category.title?.ar || "Menu",
       ar: category.title?.ar || category.title?.en || "المنيو",
       sourceId: category.id,
       source: category
     }));
-    categoryLabels = Object.fromEntries(menuCategories.map(category => [category.id, category.label]));
-    categoryLabelsAr = Object.fromEntries(menuCategories.map(category => [category.id, category.ar]));
 
     const loadedItems = [];
+    const failedCategoryIds = new Set();
     failedCategoryCount = 0;
-    for (let offset = 0; offset < menuCategories.length; offset += 6) {
-      const batch = menuCategories.slice(offset, offset + 6);
+    for (let offset = 0; offset < nextCategories.length; offset += 6) {
+      const batch = nextCategories.slice(offset, offset + 6);
       const results = await Promise.allSettled(batch.map(async category => {
-        const data = await fetchJSON(`${apiBase}/branches/${branchId}/categories/${category.sourceId}/products`);
-        return (data.products || []).map(product => productToMenuItem(product, category.source));
+        const bundledProducts = category.source.products;
+        const products = Array.isArray(bundledProducts)
+          ? bundledProducts
+          : (await fetchJSON(`${apiBase}/branches/${branchId}/categories/${category.sourceId}/products`)).products || [];
+        return products.map(product => productToMenuItem(product, category.source));
       }));
-      results.forEach(result => {
+      results.forEach((result, index) => {
         if (result.status === "fulfilled") loadedItems.push(...result.value);
-        else failedCategoryCount += 1;
+        else {
+          failedCategoryCount += 1;
+          failedCategoryIds.add(batch[index].id);
+        }
       });
     }
 
+    if (failedCategoryIds.size && cachedMenu) {
+      loadedItems.push(...cachedMenu.items.filter(item => failedCategoryIds.has(item.category)));
+    }
     if (!loadedItems.length) throw new Error("The official menu returned no products");
     const nextSignature = officialMenuSignature(loadedItems);
     const menuChanged = nextSignature !== lastMenuSignature;
-    menuItems = loadedItems;
-    lastMenuSignature = nextSignature;
-    menuLoadState = "loaded";
-    state.category = preserveView && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
-      ? previousCategory
-      : "all";
-    state.visible = preserveView ? Math.max(PAGE_SIZE, previousVisible) : PAGE_SIZE;
+    applyOfficialMenu(nextCategories, loadedItems, { preserveView });
+    if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems);
     updateMenuSourceMessage();
     if (menuChanged || !preserveView) renderMenu();
   } catch (error) {
-    if (preserveView && menuItems.length) {
+    if (menuItems.length) {
       console.warn("Official menu background refresh failed", error);
       return;
     }
