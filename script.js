@@ -568,6 +568,7 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
     for (let offset = 0; offset < nextCategories.length; offset += 6) {
       const batch = nextCategories.slice(offset, offset + 6);
       const results = await Promise.allSettled(batch.map(async category => {
+        if (category.source.productsUnavailable) throw new Error("Bundled category is temporarily unavailable");
         const bundledProducts = category.source.products;
         const products = Array.isArray(bundledProducts)
           ? bundledProducts

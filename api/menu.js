@@ -34,18 +34,25 @@ export default async function handler(request, response) {
   try {
     const categories = await fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`);
     const completeCategories = [];
+    let failedCategoryCount = 0;
 
     for (let offset = 0; offset < categories.length; offset += 6) {
       const batch = categories.slice(offset, offset + 6);
-      const results = await Promise.all(batch.map(async category => {
+      const results = await Promise.allSettled(batch.map(async category => {
         const data = await fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories/${category.id}/products`);
         return { ...category, products: data.products || [] };
       }));
-      completeCategories.push(...results);
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") completeCategories.push(result.value);
+        else {
+          failedCategoryCount += 1;
+          completeCategories.push({ ...batch[index], products: [], productsUnavailable: true });
+        }
+      });
     }
 
     response.setHeader("Cache-Control", "public, s-maxage=120, stale-while-revalidate=86400");
-    return response.status(200).json({ status: true, data: { categories: completeCategories } });
+    return response.status(200).json({ status: true, data: { categories: completeCategories, failedCategoryCount } });
   } catch (error) {
     console.error("Official menu proxy failed", error);
     response.setHeader("Cache-Control", "no-store");
