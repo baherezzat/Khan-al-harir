@@ -2,7 +2,8 @@ import sharp from "sharp";
 
 const ALLOWED_IMAGE_HOSTS = new Set(["dashboard.iconapp.site"]);
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
-const OUTPUT_SIZE = 1000;
+const OUTPUT_WIDTH = 1000;
+const OUTPUT_HEIGHT = 750;
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
@@ -40,8 +41,8 @@ export default async function handler(request, response) {
     const image = await sharp(sourceBuffer)
       .rotate()
       .resize({
-        width: OUTPUT_SIZE,
-        height: OUTPUT_SIZE,
+        width: OUTPUT_WIDTH,
+        height: OUTPUT_HEIGHT,
         fit: "contain",
         position: "centre",
         background: "#fbfaf5",

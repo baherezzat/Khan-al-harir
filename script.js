@@ -451,7 +451,7 @@ function enhancedMenuImage(source) {
   try {
     const url = new URL(source, window.location.href);
     if (url.protocol === "https:" && url.hostname === "dashboard.iconapp.site") {
-      return `/api/menu-image?src=${encodeURIComponent(url.href)}`;
+      return `/api/menu-image?v=2&src=${encodeURIComponent(url.href)}`;
     }
   } catch {}
   return source;
