@@ -262,7 +262,7 @@ const staticTextAr = new Map(Object.entries({
   "Syrian & Middle Eastern restaurant": "مطعم سوري وشرق أوسطي",
   "From the kitchen": "من المطبخ",
   "A feast for the eyes.": "وليمة تسرّ العين.",
-  "Restaurant listing photography, alongside clearly marked illustrative food imagery.": "صور من قائمة المطعم إلى جانب صور الطعام التوضيحية المميزة بوضوح.",
+  "A selection of Khan Al Harir dishes and table favorites.": "تشكيلة من أطباق خان الحرير ومفضلات السفرة.",
   "Friends Tray": "صينية الأصدقاء",
   "Shawarma Saj": "شاورما صاج",
   "Hummus & pita": "حمص وخبز",
@@ -324,14 +324,13 @@ const attributeTextAr = new Map(Object.entries({
 }));
 
 const galleryCaptionsAr = new Map(Object.entries({
-  "Friends Tray — generated 4K food photography": "صينية الأصدقاء — صورة طعام مولّدة بدقة 4K",
-  "Shawarma Saj — generated 4K food photography": "شاورما صاج — صورة طعام مولّدة بدقة 4K",
-  "Hummus and pita — illustrative photography": "حمص وخبز — صورة توضيحية",
-  "Charcoal Chicken — generated 4K food photography": "فراخ على الفحم — صورة طعام مولّدة بدقة 4K",
-  "Kunafa — original illustrative photography": "كنافة — صورة توضيحية أصلية",
-  "Lentil Soup — generated 4K food photography": "شوربة عدس — صورة طعام مولّدة بدقة 4K",
-  "Cold drinks — menu lineup visual": "مشروبات باردة — صورة تشكيلة المنيو",
-  "V Cola drinks — official product photography": "مشروبات ڤي كولا — صور المنتجات الرسمية"
+  "Friends Tray": "صينية الأصدقاء",
+  "Shawarma Saj": "شاورما صاج",
+  "Hummus and pita": "حمص وخبز",
+  "Charcoal Chicken": "فراخ على الفحم",
+  "Kunafa": "كنافة",
+  "Lentil Soup": "شوربة عدس",
+  "V Cola drinks": "مشروبات ڤي كولا"
 }));
 
 const arabicMenuDescriptions = {
@@ -654,18 +653,12 @@ function formatPrice(item) {
 
 function menuCard(item) {
   const isArabic = currentLanguage === "ar";
-  const imageLabel = isArabic
-    ? (item.official ? "صورة المنتج الرسمية" : item.illustrative ? "صورة توضيحية" : "صورة من قائمة المطعم")
-    : (item.official ? "Official product image" : item.illustrative ? "Illustrative image" : "Restaurant listing photo");
   const displayName = isArabic ? item.arabic : item.name;
   const description = isArabic ? (item.descriptionAr || arabicMenuDescriptions[item.category]) : (item.description || "From the current online menu.");
   return `
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${escapeHTML(isArabic ? `عرض تفاصيل ${displayName}` : `View details for ${displayName}`)}">
       <div class="menu-card-media">
-        <img src="${escapeHTML(item.image)}" alt="${escapeHTML(`${displayName} — ${imageLabel}`)}" width="3840" height="2160" loading="lazy" decoding="async">
-        ${item.official
-          ? `<span class="image-label">${isArabic ? "صورة رسمية" : "Official product"}</span>`
-          : item.illustrative ? `<span class="image-label">${isArabic ? "توضيحية" : "Illustrative"}</span>` : ""}
+        <img src="${escapeHTML(item.image)}" alt="${escapeHTML(displayName)}" width="3840" height="2160" loading="lazy" decoding="async">
       </div>
       <div class="menu-card-body">
         <p class="menu-card-category">${escapeHTML(currentCategoryLabel(item.category))}</p>
