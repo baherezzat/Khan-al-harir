@@ -446,10 +446,22 @@ function productCustomizationGroups(product) {
   return [...attributes, ...addons].filter(group => group.values.length);
 }
 
+function enhancedMenuImage(source) {
+  if (!source) return "assets/image-fallback.svg";
+  try {
+    const url = new URL(source, window.location.href);
+    if (url.protocol === "https:" && url.hostname === "dashboard.iconapp.site") {
+      return `/api/menu-image?src=${encodeURIComponent(url.href)}`;
+    }
+  } catch {}
+  return source;
+}
+
 function productToMenuItem(product, category) {
   const range = productPriceRange(product);
   const basePrice = asPrice(product.discounted_price) ?? asPrice(product.price);
   const priceOptions = productPriceOptions(product);
+  const originalImage = product.images?.[0]?.image || category.image || "assets/image-fallback.svg";
   return {
     id: `official-${product.id}`,
     name: product.title?.en || product.title?.ar || "Menu item",
@@ -464,7 +476,8 @@ function productToMenuItem(product, category) {
     priceOptions,
     customizationGroups: productCustomizationGroups(product),
     priceStatus: Number.isFinite(basePrice) ? "verified" : "unverified",
-    image: product.images?.[0]?.image || category.image || "assets/image-fallback.svg",
+    image: enhancedMenuImage(originalImage),
+    originalImage,
     illustrative: false,
     official: true
   };
@@ -902,7 +915,7 @@ function menuCard(item) {
   return `
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${escapeHTML(isArabic ? `عرض تفاصيل ${displayName}` : `View details for ${displayName}`)}">
       <div class="menu-card-media">
-        <img src="${escapeHTML(item.image)}" alt="${escapeHTML(displayName)}" width="3840" height="2160" loading="lazy" decoding="async">
+        <img src="${escapeHTML(item.image)}" data-original-src="${escapeHTML(item.originalImage || "")}" alt="${escapeHTML(displayName)}" width="1000" height="1000" loading="lazy" decoding="async">
         ${item.customizationGroups?.length ? `<span class="menu-card-options-badge">${isArabic ? "خيارات" : "Options"}</span>` : ""}
       </div>
       <div class="menu-card-body">
@@ -1093,6 +1106,10 @@ function populateMenuDetail(item) {
   const description = isArabic
     ? (item.descriptionAr || arabicMenuDescriptions[item.category])
     : (item.description || "From the current online menu.");
+  delete menuDetailImage.dataset.originalTried;
+  delete menuDetailImage.dataset.fallbackApplied;
+  menuDetailImage.classList.remove("has-fallback");
+  menuDetailImage.dataset.originalSrc = item.originalImage || "";
   menuDetailImage.src = item.image;
   menuDetailImage.alt = isArabic ? `صورة ${displayName}` : `${displayName} dish`;
   menuDetailCategory.textContent = currentCategoryLabel(item.category);
@@ -1257,6 +1274,11 @@ lightbox.addEventListener("close", () => {
 document.addEventListener("error", event => {
   const image = event.target;
   if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied) return;
+  if (image.dataset.originalSrc && !image.dataset.originalTried) {
+    image.dataset.originalTried = "true";
+    image.src = image.dataset.originalSrc;
+    return;
+  }
   image.dataset.fallbackApplied = "true";
   image.src = "assets/image-fallback.svg";
   image.classList.add("has-fallback");
