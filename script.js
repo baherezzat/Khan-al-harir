@@ -413,6 +413,39 @@ function productPriceOptions(product) {
     });
 }
 
+function productCustomizationGroups(product) {
+  const mapValue = value => ({
+    id: String(value.id),
+    label: value.title?.en || value.title?.ar || "Option",
+    labelAr: value.title?.ar || value.title?.en || "اختيار",
+    price: asPrice(value.price) ?? 0,
+    image: value.image || null
+  });
+  const attributes = (product.attributes || []).map(group => ({
+    id: `attribute-${group.id}`,
+    kind: "attribute",
+    label: group.title?.en || group.title?.ar || "Choose",
+    labelAr: group.title?.ar || group.title?.en || "اختر",
+    required: Number(group.required) === 1,
+    multiSelect: Number(group.multi_select) === 1,
+    overridePrice: Number(group.override_price) === 1,
+    values: (group.values || []).map(mapValue)
+  }));
+  const addons = (product.addons || [])
+    .filter(group => Number(group.is_active ?? 1) === 1)
+    .map(group => ({
+      id: `addon-${group.id}`,
+      kind: "addon",
+      label: group.title?.en || group.title?.ar || "Extras",
+      labelAr: group.title?.ar || group.title?.en || "إضافات",
+      required: false,
+      multiSelect: Number(group.multi_select) === 1,
+      overridePrice: false,
+      values: (group.values || []).map(mapValue)
+    }));
+  return [...attributes, ...addons].filter(group => group.values.length);
+}
+
 function productToMenuItem(product, category) {
   const range = productPriceRange(product);
   const basePrice = asPrice(product.discounted_price) ?? asPrice(product.price);
@@ -429,6 +462,7 @@ function productToMenuItem(product, category) {
     priceMin: range?.min ?? basePrice,
     priceMax: range?.max ?? basePrice,
     priceOptions,
+    customizationGroups: productCustomizationGroups(product),
     priceStatus: Number.isFinite(basePrice) ? "verified" : "unverified",
     image: product.images?.[0]?.image || category.image || "assets/image-fallback.svg",
     illustrative: false,
@@ -443,7 +477,14 @@ function officialMenuSignature(items) {
     item.oldPrice,
     item.priceMin,
     item.priceMax,
-    item.priceOptions.map(option => [option.label, option.labelAr, option.price])
+    item.priceOptions.map(option => [option.label, option.labelAr, option.price]),
+    (item.customizationGroups || []).map(group => [
+      group.id,
+      group.required,
+      group.multiSelect,
+      group.overridePrice,
+      group.values.map(value => [value.id, value.label, value.labelAr, value.price])
+    ])
   ]));
 }
 
@@ -848,6 +889,12 @@ function formatPrice(item) {
     : currentLanguage === "ar" ? "السعر غير متاح حاليًا" : "Price currently unavailable";
 }
 
+function formatCurrency(price) {
+  const locale = currentLanguage === "ar" ? "ar-EG" : "en-EG";
+  const value = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(price);
+  return currentLanguage === "ar" ? `${value} ج.م` : `${value} EGP`;
+}
+
 function menuCard(item) {
   const isArabic = currentLanguage === "ar";
   const displayName = isArabic ? item.arabic : item.name;
@@ -856,6 +903,7 @@ function menuCard(item) {
     <article class="menu-card" data-item-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${escapeHTML(isArabic ? `عرض تفاصيل ${displayName}` : `View details for ${displayName}`)}">
       <div class="menu-card-media">
         <img src="${escapeHTML(item.image)}" alt="${escapeHTML(displayName)}" width="3840" height="2160" loading="lazy" decoding="async">
+        ${item.customizationGroups?.length ? `<span class="menu-card-options-badge">${isArabic ? "خيارات" : "Options"}</span>` : ""}
       </div>
       <div class="menu-card-body">
         <p class="menu-card-category">${escapeHTML(currentCategoryLabel(item.category))}</p>
@@ -963,10 +1011,80 @@ const menuDetailCategory = document.getElementById("menuDetailCategory");
 const menuDetailName = document.getElementById("menuDetailName");
 const menuDetailSecondary = document.getElementById("menuDetailSecondary");
 const menuDetailDescription = document.getElementById("menuDetailDescription");
+const menuDetailOptions = document.getElementById("menuDetailOptions");
 const menuDetailPriceLabel = document.getElementById("menuDetailPriceLabel");
 const menuDetailPrice = document.getElementById("menuDetailPrice");
 let menuDetailItemId = null;
 let menuDetailOpener = null;
+
+function customizationOptionMarkup(item, group, groupIndex, value, valueIndex) {
+  const isArabic = currentLanguage === "ar";
+  const inputType = group.multiSelect ? "checkbox" : "radio";
+  const inputName = `custom-${item.id}-${group.id}`;
+  const isDefault = !group.multiSelect && ((group.required && valueIndex === 0) || (!group.required && valueIndex === -1));
+  const label = isArabic ? value.labelAr : value.label;
+  const priceText = value.price > 0
+    ? `${group.overridePrice ? "" : "+"}${formatCurrency(value.price)}`
+    : (isArabic ? "بدون زيادة" : "No extra charge");
+  const image = value.image
+    ? `<img src="${escapeHTML(value.image)}" alt="" width="48" height="48" loading="lazy">`
+    : "";
+  return `<label class="customization-option">
+    <input type="${inputType}" name="${escapeHTML(inputName)}" value="${escapeHTML(value.id)}"
+      data-group-index="${groupIndex}" data-price="${value.price}" data-override-price="${group.overridePrice ? "true" : "false"}"
+      ${isDefault ? "checked" : ""}>
+    ${image}
+    <span class="customization-option-copy"><b>${escapeHTML(label)}</b><small>${escapeHTML(priceText)}</small></span>
+    <span class="customization-check" aria-hidden="true"></span>
+  </label>`;
+}
+
+function renderMenuCustomizations(item) {
+  const groups = item.customizationGroups || [];
+  if (!groups.length) {
+    menuDetailOptions.hidden = true;
+    menuDetailOptions.innerHTML = "";
+    return;
+  }
+  const isArabic = currentLanguage === "ar";
+  menuDetailOptions.hidden = false;
+  menuDetailOptions.innerHTML = `<div class="customization-intro">
+      <b>${isArabic ? "خصص طبقك" : "Customize your dish"}</b>
+      <span>${isArabic ? "الخيارات والأسعار من منيو QR الرسمي" : "Options and prices from the official QR menu"}</span>
+    </div>${groups.map((group, groupIndex) => {
+      const label = isArabic ? group.labelAr : group.label;
+      const guidance = group.required
+        ? (isArabic ? "مطلوب" : "Required")
+        : group.multiSelect
+          ? (isArabic ? "اختر ما تريد" : "Choose any")
+          : (isArabic ? "اختياري" : "Optional");
+      const noExtra = !group.required && !group.multiSelect
+        ? customizationOptionMarkup(item, group, groupIndex, {
+            id: "none",
+            label: "No extra",
+            labelAr: "بدون إضافة",
+            price: 0,
+            image: null
+          }, -1)
+        : "";
+      return `<fieldset class="customization-group" data-group-index="${groupIndex}">
+        <legend><span>${escapeHTML(label)}</span><small>${escapeHTML(guidance)}</small></legend>
+        <div class="customization-list">${noExtra}${group.values.map((value, valueIndex) => customizationOptionMarkup(item, group, groupIndex, value, valueIndex)).join("")}</div>
+      </fieldset>`;
+    }).join("")}`;
+}
+
+function updateCustomizedPrice(item) {
+  let basePrice = Number.isFinite(item.price) ? item.price : 0;
+  let additions = 0;
+  menuDetailOptions.querySelectorAll("input:checked").forEach(input => {
+    const price = Number(input.dataset.price) || 0;
+    if (input.dataset.overridePrice === "true" && input.value !== "none") basePrice = price;
+    else additions += price;
+  });
+  menuDetailPrice.textContent = formatCurrency(basePrice + additions);
+  menuDetailPrice.dataset.priceStatus = "verified";
+}
 
 function populateMenuDetail(item) {
   const isArabic = currentLanguage === "ar";
@@ -983,9 +1101,15 @@ function populateMenuDetail(item) {
   menuDetailSecondary.lang = isArabic ? "en" : "ar";
   menuDetailSecondary.dir = isArabic ? "ltr" : "rtl";
   menuDetailDescription.textContent = description;
-  menuDetailPriceLabel.textContent = isArabic ? "السعر" : "Price";
-  menuDetailPrice.textContent = formatPrice(item);
-  menuDetailPrice.dataset.priceStatus = priceDetails(item).status;
+  renderMenuCustomizations(item);
+  if (item.customizationGroups?.length) {
+    menuDetailPriceLabel.textContent = isArabic ? "الإجمالي حسب اختياراتك" : "Total with your selections";
+    updateCustomizedPrice(item);
+  } else {
+    menuDetailPriceLabel.textContent = isArabic ? "السعر" : "Price";
+    menuDetailPrice.textContent = formatPrice(item);
+    menuDetailPrice.dataset.priceStatus = priceDetails(item).status;
+  }
   menuDetail.setAttribute("aria-label", isArabic ? `تفاصيل ${displayName}` : `${displayName} details`);
   document.getElementById("menuDetailClose").setAttribute("aria-label", isArabic ? "إغلاق تفاصيل الطبق" : "Close dish details");
 }
@@ -1011,6 +1135,11 @@ menuGrid.addEventListener("keydown", event => {
   if (!card) return;
   event.preventDefault();
   openMenuDetail(card.dataset.itemId, card);
+});
+
+menuDetailOptions.addEventListener("change", () => {
+  const item = menuItems.find(candidate => candidate.id === menuDetailItemId);
+  if (item) updateCustomizedPrice(item);
 });
 
 document.getElementById("menuDetailClose").addEventListener("click", () => menuDetail.close());
