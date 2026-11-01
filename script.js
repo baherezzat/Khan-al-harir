@@ -1438,6 +1438,8 @@ function updateCartLanguage() {
   document.getElementById("cartClose").setAttribute("aria-label", ar ? "إغلاق عربة التسوق" : "Close shopping cart");
   const progress = ar ? ["السلة", "البيانات", "الدفع", "التأكيد"] : ["Cart", "Details", "Payment", "Confirm"];
   document.querySelectorAll("#checkoutProgress b").forEach((element, index) => { element.textContent = progress[index]; });
+  document.getElementById("checkoutProgress").setAttribute("aria-label", ar ? "خطوات إتمام الطلب" : "Checkout progress");
+  checkoutBack.textContent = ar ? "رجوع" : "Back";
   document.getElementById("menuAddToCart").textContent = ar ? "أضف للسلة" : "Add to cart";
   document.querySelector(".item-note > span").textContent = ar ? "طلب خاص" : "Special request";
   menuItemNote.placeholder = ar ? "مثال: بدون بصل" : "For example: no onions";
@@ -1458,6 +1460,13 @@ function updateCartLanguage() {
   document.querySelectorAll(".checkout-fields label > span").forEach((element, index) => { element.textContent = fieldLabels[index]; });
   document.getElementById("deliveryArea").placeholder = ar ? "المنطقة / الحي" : "Area / district";
   document.getElementById("deliveryStreet").placeholder = ar ? "الشارع، رقم العمارة" : "Street, building number";
+  const pickupOptions = document.getElementById("pickupTime").options;
+  [
+    ar ? "في أقرب وقت" : "As soon as possible",
+    ar ? "خلال ٣٠ دقيقة" : "In 30 minutes",
+    ar ? "خلال ٤٥ دقيقة" : "In 45 minutes",
+    ar ? "خلال ٦٠ دقيقة" : "In 60 minutes"
+  ].forEach((label, index) => { if (pickupOptions[index]) pickupOptions[index].textContent = label; });
   document.getElementById("hoursNotice").textContent = ar ? "تُستقبل الطلبات خلال مواعيد العمل: يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "Orders are accepted during restaurant hours: daily 9:00 AM–4:00 AM.";
   document.querySelector(".payment-choice legend").textContent = ar ? "طريقة الدفع" : "Payment method";
   const paymentLabels = document.querySelectorAll(".payment-choice label");
