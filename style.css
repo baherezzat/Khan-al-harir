@@ -347,7 +347,7 @@ h2 em, h1 em { font-weight: 400; }
 .tile-copy > span { margin-top: 8px; font-size: 12px; font-weight: 600; }
 
 /* Menu */
-.menu-section { background: var(--surface); }
+.menu-section { padding-bottom: 26px; background: var(--surface); }
 .menu-intro { display: grid; max-width: 60ch; gap: 16px; color: var(--text-soft); }
 .menu-source { font-size: 13px; line-height: 1.65; }
 .menu-tools { display: grid; gap: 12px; margin-bottom: 18px; }
