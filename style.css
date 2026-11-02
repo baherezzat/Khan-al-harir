@@ -938,6 +938,43 @@ html[dir="rtl"] .lightbox-close { right: auto; left: 10px; }
 html[dir="rtl"] .menu-detail-close { right: auto; left: 14px; }
 html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
 
+/* Compact, horizontal menu rows for phones; full descriptions remain in details. */
+@media (max-width: 599px) {
+  .menu-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .menu-card {
+    display: grid;
+    grid-template-columns: clamp(98px, 30vw, 140px) minmax(0, 1fr);
+    align-items: start;
+    border-radius: 12px;
+    padding: 8px;
+    gap: 10px;
+    text-align: start;
+  }
+  .menu-card-media { aspect-ratio: auto; overflow: visible; background: transparent; }
+  .menu-card-media img { display: block; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+  .menu-card:hover .menu-card-media img { transform: none; }
+  .menu-card .menu-card-options-badge {
+    position: static;
+    display: block;
+    margin-top: 6px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 6px;
+    box-shadow: none;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  .menu-card-body { min-width: 0; height: 100%; padding: 2px 0 0; }
+  .menu-card-category { font-size: 9px; margin-bottom: 5px; letter-spacing: .03em; }
+  .menu-card h3, html[lang="ar"] .menu-card h3 { font-size: 21px; line-height: 1.25; overflow-wrap: anywhere; }
+  .menu-card-arabic, .menu-card-description { display: none; }
+  .menu-card-footer { gap: 5px; padding-top: 7px; }
+  .menu-card-price { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+  .menu-card-view { min-height: 34px; padding-top: 5px; font-size: 11px; }
+}
+
 @media (max-width: 520px) {
   .customization-list { grid-template-columns: 1fr; }
   .brand-copy { display: none; }
