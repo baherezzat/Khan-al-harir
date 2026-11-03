@@ -416,7 +416,7 @@ h2 em, h1 em { font-weight: 400; }
   overflow: hidden;
   border: 1px solid var(--p-line);
   background: var(--card-bg);
-  cursor: zoom-in;
+  cursor: url("assets/sandwich-cursor.svg") 4 13, pointer;
   transition: border-color 180ms ease-out, box-shadow 180ms ease-out, transform 180ms var(--ease);
 }
 .menu-card:hover, .menu-card:focus-visible { border-color: var(--p-green); box-shadow: 0 14px 36px rgba(8, 23, 17, .12); transform: translateY(-3px); }
