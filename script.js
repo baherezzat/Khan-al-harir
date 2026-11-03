@@ -268,7 +268,6 @@ const staticTextAr = new Map(Object.entries({
   "Syrian & Middle Eastern restaurant": "مطعم سوري وشرق أوسطي",
   "From the kitchen": "من المطبخ",
   "A feast for the eyes.": "وليمة تسرّ العين.",
-  "Watch Khan Al Harir’s latest reel from Facebook.": "شاهد أحدث ريل لخان الحرير من فيسبوك.",
   "Loading the reel…": "جارٍ تحميل الريل…",
   "Turn sound on": "تشغيل الصوت",
   "Turn sound off": "كتم الصوت",
