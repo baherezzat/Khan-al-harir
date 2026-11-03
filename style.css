@@ -1008,10 +1008,10 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   html[dir="rtl"] .footer-bottom p:last-child { text-align: left; }
 }
 
-/* Native-size photographic cursor for mouse users throughout the site. */
+/* Native-size cartoon shawarma cursor for mouse users throughout the site. */
 @media (hover: hover) and (pointer: fine) {
   html, body, body * {
-    cursor: url("assets/shawarma-cursor-v2-32.png") 27 3, auto !important;
+    cursor: url("assets/shawarma-cartoon-32.png") 23 3, auto !important;
   }
 }
 
