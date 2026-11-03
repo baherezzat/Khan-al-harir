@@ -416,7 +416,7 @@ h2 em, h1 em { font-weight: 400; }
   overflow: hidden;
   border: 1px solid var(--p-line);
   background: var(--card-bg);
-  cursor: url("assets/shawarma-cursor.svg") 21 5, pointer;
+  cursor: pointer;
   transition: border-color 180ms ease-out, box-shadow 180ms ease-out, transform 180ms var(--ease);
 }
 .menu-card:hover, .menu-card:focus-visible { border-color: var(--p-green); box-shadow: 0 14px 36px rgba(8, 23, 17, .12); transform: translateY(-3px); }
@@ -1006,6 +1006,13 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   html[dir="rtl"] .hero-arabic { right: auto; left: 32px; }
   html[dir="rtl"] .hero-photo-note { right: auto; left: 32px; }
   html[dir="rtl"] .footer-bottom p:last-child { text-align: left; }
+}
+
+/* Native-size photographic cursor for mouse users throughout the site. */
+@media (hover: hover) and (pointer: fine) {
+  html, body, body * {
+    cursor: url("assets/shawarma-cursor-32.png") 29 2, auto !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
