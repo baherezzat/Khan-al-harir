@@ -214,7 +214,7 @@ const staticTextAr = new Map(Object.entries({
   "Skip to main content": "انتقل إلى المحتوى الرئيسي",
   "Menu": "المنيو",
   "About": "عن المطعم",
-  "Gallery": "الصور",
+  "Latest videos": "أحدث الفيديوهات",
   "Contact": "تواصل معنا",
   "View the menu": "شاهد المنيو",
   "Explore the dishes": "اكتشف أطباقنا",
