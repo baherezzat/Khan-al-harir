@@ -1210,7 +1210,20 @@ const deliveryFeeNote = document.getElementById("deliveryFeeNote");
 const menuItemNote = document.getElementById("menuItemNote");
 let checkoutStep = 1;
 let cart = readStoredJSON(CART_STORAGE_KEY, []);
-if (!Array.isArray(cart)) cart = [];
+cart = sanitizeCart(cart);
+
+function sanitizeCart(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter(line => line && typeof line === "object"
+    && typeof line.signature === "string"
+    && typeof line.name === "string" && typeof line.arabic === "string"
+    && typeof line.image === "string"
+    && Number.isFinite(line.unitPrice) && line.unitPrice > 0
+    && Number.isSafeInteger(line.quantity) && line.quantity > 0
+    && Array.isArray(line.selections) && line.selections.every(selection =>
+      selection && typeof selection.label === "string" && typeof selection.labelAr === "string"))
+    .map(line => ({ ...line, note: typeof line.note === "string" ? line.note : "" }));
+}
 
 function readStoredJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; }
@@ -1247,6 +1260,15 @@ function collectSelection(item) {
 function addCurrentItemToCart() {
   const item = menuItems.find(candidate => candidate.id === menuDetailItemId);
   if (!item) return;
+  const missingIndex = (item.customizationGroups || []).findIndex((group, index) =>
+    group.required && !Array.from(menuDetailOptions.querySelectorAll("input:checked"))
+      .some(input => Number(input.dataset.groupIndex) === index && input.value !== "none"));
+  if (missingIndex !== -1) {
+    menuDetailPriceLabel.textContent = currentLanguage === "ar"
+      ? "اختر الإضافات المطلوبة أولًا" : "Please select all required options first";
+    menuDetailOptions.querySelectorAll("fieldset")[missingIndex]?.querySelector("input")?.focus();
+    return;
+  }
   const { selections, unitPrice } = collectSelection(item);
   if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
     menuDetailPriceLabel.textContent = currentLanguage === "ar" ? "لا يمكن طلب هذا الصنف حاليًا" : "This item cannot be ordered right now";
@@ -1255,7 +1277,10 @@ function addCurrentItemToCart() {
   const note = menuItemNote.value.trim();
   const signature = JSON.stringify([item.id, selections.map(selection => [selection.group, selection.label]), note]);
   const existing = cart.find(line => line.signature === signature);
-  if (existing) existing.quantity += 1;
+  if (existing) {
+    existing.quantity += 1;
+    existing.unitPrice = unitPrice;
+  }
   else cart.push({
     signature, itemId: item.id, name: item.name, arabic: item.arabic, image: item.image,
     unitPrice, selections, note, quantity: 1
@@ -1344,7 +1369,9 @@ function saveCustomerDraft() {
 }
 
 function validEgyptianPhone(value) {
-  const digits = value.replace(/\D/g, "").replace(/^20/, "0");
+  const digits = value.replace(/[٠-٩]/g, digit => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, digit => String(digit.charCodeAt(0) - 1776))
+    .replace(/\D/g, "").replace(/^0020/, "0").replace(/^20/, "0");
   return /^01[0125]\d{8}$/.test(digits);
 }
 
@@ -1506,6 +1533,7 @@ cartItems.addEventListener("click", event => {
   if (!button || !lineElement) return;
   const index = Number(lineElement.dataset.cartIndex);
   const action = button.dataset.cartAction;
+  if (!cart[index]) return;
   if (action === "increase") cart[index].quantity += 1;
   if (action === "decrease") cart[index].quantity -= 1;
   if (action === "remove" || cart[index].quantity <= 0) cart.splice(index, 1);
@@ -1528,7 +1556,7 @@ const savedCustomer = readStoredJSON(CUSTOMER_STORAGE_KEY, {});
 Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, pickupTime: savedCustomer.pickupTime, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map, orderNote: savedCustomer.orderNote }).forEach(([id, value]) => {
   if (value && document.getElementById(id)) document.getElementById(id).value = value;
 });
-if (savedCustomer.fulfilment) {
+if (["pickup", "delivery"].includes(savedCustomer.fulfilment)) {
   const input = document.querySelector(`input[name="fulfilment"][value="${savedCustomer.fulfilment}"]`);
   if (input) input.checked = true;
 }
