@@ -1008,6 +1008,50 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   html[dir="rtl"] .footer-bottom p:last-child { text-align: left; }
 }
 
+/* Keep section transitions compact without reducing control hit areas. */
+.section-pad { padding-block: 26px; }
+.section-heading { gap: 12px; margin-bottom: 18px; }
+.section-heading .eyebrow, .about-copy .eyebrow,
+.contact-heading .eyebrow { margin-bottom: 12px; }
+.section-heading h2, .about-copy h2, .contact-heading h2 {
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
+}
+.menu-intro { gap: 8px; }
+.menu-tools { margin-bottom: 12px; }
+.category-wrap { margin-bottom: 16px; }
+.menu-more-wrap { margin-top: 14px; }
+.order-section { padding-block: 26px; }
+.order-inner { gap: 16px; }
+.order-inner h2 { font-size: clamp(3.2rem, 10vw, 5rem); }
+.order-script { margin-top: 10px; }
+.about-copy { padding-block: 26px; }
+.about-copy h2 { margin-bottom: 12px; }
+.about-signature { margin-top: 12px; padding-top: 12px; }
+.gallery-heading { grid-template-columns: minmax(0, 1fr); }
+.reel-showcase { padding-block: 0; }
+.contact-grid { gap: 20px; }
+.contact-heading h2 { margin-bottom: 16px; }
+.contact-details { gap: 16px; }
+.contact-details > div, .contact-note { padding-top: 14px; }
+.footer-top { gap: 20px; }
+.footer-social { gap: 14px; margin-top: 16px; padding-top: 16px; }
+.footer-bottom { margin-top: 16px; padding-top: 14px; }
+@media (min-width: 900px) {
+  .section-pad { padding-block: 32px; }
+  .section-heading { align-items: center; margin-bottom: 20px; }
+  .menu-heading { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .menu-intro { padding-bottom: 0; }
+  .order-section { padding-block: 30px; }
+  .order-inner { gap: 28px; }
+  .about-section { min-height: 0; }
+  .about-image-wrap { min-height: 360px; }
+  .about-copy { padding-block: 32px; }
+  .contact-section { padding-block: 32px; }
+  .contact-grid { gap: 32px; }
+  .contact-details { padding-top: 0; }
+  .site-footer { padding-block: 26px 22px; }
+}
+
 /* Native-size cartoon shawarma cursor for mouse users throughout the site. */
 @media (hover: hover) and (pointer: fine) {
   html, body, body * {
