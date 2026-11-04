@@ -289,7 +289,7 @@ const staticTextAr = new Map(Object.entries({
   "Find your way to the Khan": "طريقك إلى خان الحرير",
   "Your table": "سفرتك",
   "is in New Cairo.": "في القاهرة الجديدة.",
-  "Open in Google Maps": "افتح في خرائط Google",
+  "Open in Google Maps": "أفتح خريطة موقع المطعم",
   "Branch": "الفرع",
   "Banafseg, First Settlement": "البنفسج، التجمع الأول",
   "Mall 24, Banafseg Service Area,": "مول 24، منطقة خدمات البنفسج،",
