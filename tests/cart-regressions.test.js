@@ -75,3 +75,51 @@ test("re-adding a dish after its price changes updates its existing cart line", 
 test("saved fulfilment selector is restricted to the two supported values", () => {
   assert.ok(source.includes('["pickup", "delivery"].includes(savedCustomer.fulfilment)'));
 });
+
+function storage() {
+  const data = new Map();
+  return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value),
+    removeItem: key => data.delete(key) };
+}
+test("cart is scoped to the tab while customer details persist in the browser", () => {
+  const localStorage = storage();
+  const sessionStorage = storage();
+  const globals = {localStorage, sessionStorage, CUSTOMER_STORAGE_KEY: "customer", CART_STORAGE_KEY: "cart", cart: [validLine]};
+  localStorage.setItem("customer", JSON.stringify({name: "Customer"}));
+  const code = functionSource("readStoredJSON", "cartQuantity");
+  run(code + "; saveCart()", globals);
+  assert.equal(localStorage.getItem("cart"), null);
+  assert.ok(sessionStorage.getItem("cart"));
+  assert.equal(run(code + '; readStoredJSON("customer", {}).name', globals), "Customer");
+  assert.equal(run(code + '; readStoredJSON("cart", []).length', {...globals, sessionStorage: storage()}), 0);
+});
+test("handoff clears cart and order notes while retaining customer details and message retry link", () => {
+  const localStorage = storage(), sessionStorage = storage();
+  const nodes = { confirmAccuracy: {checked: true}, orderReview: {replaceChildren() {}},
+    whatsappOrderLink: {}, successOrderNumber: {}, checkoutSuccess: {hidden: true} };
+  const notes = [{value: "no salt"}, {value: "extra sauce"}];
+  let opened;
+  const globals = {
+    localStorage, sessionStorage, CUSTOMER_STORAGE_KEY: "customer", CART_STORAGE_KEY: "cart",
+    cart: [validLine], checkoutStep: 4, currentLanguage: "en", RESTAURANT_WHATSAPP: "201050714404",
+    checkoutNext: {}, confirmError: {}, cartFoot: {}, renderCart() {},
+    customerData: () => ({name: "Customer", phone: "01012345678", orderNote: notes[0].value}),
+    document: {getElementById: id => nodes[id], querySelectorAll: selector => selector === ".checkout-panel" ? [] : notes},
+    isRestaurantOpenNow: () => true, createOrderNumber: () => "TEST",
+    buildWhatsAppMessage: () => "2 chicken orders",
+    window: {open: url => {opened = url;}}
+  };
+  sessionStorage.setItem("cart", JSON.stringify([validLine]));
+  const code = functionSource("saveCustomerDraft", "validEgyptianPhone") +
+    functionSource("confirmOrder", "updateFulfilmentFields");
+  run(code + "; confirmOrder()", globals);
+  assert.equal(globals.cart.length, 0);
+  assert.equal(sessionStorage.getItem("cart"), null);
+  assert.equal(JSON.parse(localStorage.getItem("customer")).phone, "01012345678");
+  assert.equal(JSON.parse(localStorage.getItem("customer")).orderNote, undefined);
+  assert.ok(notes.every(note => note.value === ""));
+  assert.equal(nodes.confirmAccuracy.checked, false);
+  assert.equal(nodes.whatsappOrderLink.href, opened);
+  assert.ok(opened.includes(encodeURIComponent("2 chicken orders")));
+  assert.equal(nodes.checkoutSuccess.hidden, false);
+});

@@ -1189,8 +1189,12 @@ menuDetail.addEventListener("close", () => {
 
 // Shopping cart and four-step WhatsApp checkout. The browser stores the draft;
 // final submission remains customer-controlled until production order storage is connected.
-const CART_STORAGE_KEY = "khan-cart-v1";
+const CART_STORAGE_KEY = "khan-cart-session-v2";
 const CUSTOMER_STORAGE_KEY = "khan-customer-v1";
+// Discard persistent drafts left by earlier visits on a shared browser.
+for (const key of ["khan-cart-v1"]) {
+  try { localStorage.removeItem(key); } catch (_) { /* storage may be unavailable */ }
+}
 const RESTAURANT_WHATSAPP = "201050714404";
 const cartDialog = document.getElementById("cartDialog");
 const cartTrigger = document.getElementById("cartTrigger");
@@ -1225,11 +1229,14 @@ function sanitizeCart(value) {
 }
 
 function readStoredJSON(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; }
+  try {
+    const storage = key === CUSTOMER_STORAGE_KEY ? localStorage : sessionStorage;
+    return JSON.parse(storage.getItem(key)) ?? fallback;
+  } catch (_) { return fallback; }
 }
 
 function saveCart() {
-  try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); } catch (_) { /* storage is optional */ }
+  try { sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); } catch (_) { /* storage is optional */ }
 }
 
 function cartQuantity() { return cart.reduce((sum, line) => sum + line.quantity, 0); }
@@ -1364,7 +1371,8 @@ function customerData() {
 }
 
 function saveCustomerDraft() {
-  try { localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(customerData())); } catch (_) { /* optional */ }
+  const { orderNote, ...details } = customerData();
+  try { localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(details)); } catch (_) { /* optional */ }
 }
 
 function validEgyptianPhone(value) {
@@ -1430,6 +1438,7 @@ function buildWhatsAppMessage(orderNumber) {
 }
 
 function confirmOrder() {
+  if (!cart.length) return;
   if (!document.getElementById("confirmAccuracy").checked) {
     confirmError.textContent = currentLanguage === "ar" ? "أكد أنك راجعت الطلب وبيانات التواصل." : "Please confirm that you reviewed the order and contact details.";
     confirmError.hidden = false;
@@ -1451,7 +1460,22 @@ function confirmOrder() {
   document.getElementById("checkoutSuccess").hidden = false;
   cartFoot.hidden = true;
   checkoutNext.disabled = false;
+  clearSubmittedDraft();
   window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function clearSubmittedDraft() {
+  cart = [];
+  try {
+    sessionStorage.removeItem(CART_STORAGE_KEY);
+  } catch (_) { /* the in-memory draft is still cleared */ }
+  document.querySelectorAll("#orderNote, #menuItemNote")
+    .forEach(input => { input.value = ""; });
+  saveCustomerDraft();
+  document.getElementById("confirmAccuracy").checked = false;
+  document.getElementById("orderReview").replaceChildren();
+  checkoutStep = 1;
+  renderCart();
 }
 
 function updateFulfilmentFields() {
@@ -1512,7 +1536,7 @@ function updateCartLanguage() {
   document.querySelector(".checkout-safety b").textContent = ar ? "لا نجمع بيانات بطاقات على الموقع." : "No online card details are collected.";
   document.querySelector(".checkout-safety p").textContent = ar ? "يؤكد المطعم التوفر ورسوم التوصيل وطريقة الدفع عبر واتساب." : "The restaurant confirms availability, delivery fee, and payment method on WhatsApp.";
   document.querySelector(".confirm-check span").textContent = ar ? "راجعت الطلب وبيانات التواصل." : "I checked my order and contact details.";
-  document.querySelector(".privacy-note").textContent = ar ? "ستُفتح تفاصيل طلبك في واتساب لتراجعها وترسلها إلى خان الحرير. لا يخزنها هذا الموقع." : "Your order details will open in WhatsApp for you to review and send to Khan Al Harir. They are not stored by this website.";
+  document.querySelector(".privacy-note").textContent = ar ? "تُحفظ بيانات التواصل على متصفحك لتسهيل الطلب القادم. تُفرّغ السلة عند تأكيد وفتح واتساب؛ يجب إرسال الرسالة ليصل الطلب للمطعم." : "Contact details are saved in your browser for your next order. The cart clears when you confirm and open WhatsApp; send the message for the restaurant to receive your order.";
   document.querySelector("#checkoutSuccess .eyebrow").textContent = ar ? "الطلب جاهز للإرسال" : "Order prepared";
   document.querySelector("#checkoutSuccess h3").textContent = ar ? "أرسله إلى المطعم" : "Send it to the restaurant";
   document.querySelectorAll("#checkoutSuccess p")[2].textContent = ar ? "لا يصل الطلب إلى المطعم حتى تضغط إرسال في واتساب ويؤكده المطعم." : "Your order is not received until you press Send in WhatsApp and the restaurant confirms it.";
@@ -1552,7 +1576,7 @@ checkoutNext.addEventListener("click", () => {
 });
 
 const savedCustomer = readStoredJSON(CUSTOMER_STORAGE_KEY, {});
-Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, pickupTime: savedCustomer.pickupTime, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map, orderNote: savedCustomer.orderNote }).forEach(([id, value]) => {
+Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, pickupTime: savedCustomer.pickupTime, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map }).forEach(([id, value]) => {
   if (value && document.getElementById(id)) document.getElementById(id).value = value;
 });
 if (["pickup", "delivery"].includes(savedCustomer.fulfilment)) {
