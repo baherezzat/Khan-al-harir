@@ -1330,6 +1330,7 @@ function renderCart() {
 }
 
 function setCheckoutStep(step) {
+  resetOrderThanks();
   checkoutStep = Math.max(1, Math.min(4, step));
   document.querySelectorAll(".checkout-panel").forEach(panel => { panel.hidden = Number(panel.dataset.panel) !== checkoutStep; });
   document.getElementById("checkoutSuccess").hidden = true;
@@ -1487,6 +1488,28 @@ function updateFulfilmentFields() {
   renderCart();
 }
 
+let orderThanksTimer = null;
+function resetOrderThanks() {
+  window.clearTimeout(orderThanksTimer);
+  orderThanksTimer = null;
+  document.getElementById("orderThanks").hidden = true;
+  cartDialog.classList.remove("is-thanking");
+}
+
+function showOrderThanks() {
+  if (document.getElementById("checkoutSuccess").hidden) return;
+  resetOrderThanks();
+  const ar = currentLanguage === "ar";
+  document.getElementById("orderThanksTitle").textContent = ar
+    ? "شكرًا لطلبك من مطعمنا" : "Thank you for ordering from our restaurant!";
+  document.getElementById("orderThanksMessage").textContent = ar
+    ? "نتمنى لك وجبة سعيدة" : "We wish you a delicious meal.";
+  document.getElementById("checkoutSuccess").hidden = true;
+  document.getElementById("orderThanks").hidden = false;
+  cartDialog.classList.add("is-thanking");
+  orderThanksTimer = window.setTimeout(() => cartDialog.close(), 4000);
+}
+
 function updateCartLanguage() {
   if (!cartDialog) return;
   const ar = currentLanguage === "ar";
@@ -1539,6 +1562,7 @@ function updateCartLanguage() {
   document.querySelector(".privacy-note").textContent = ar ? "تُحفظ بيانات التواصل على متصفحك لتسهيل الطلب القادم. تُفرّغ السلة عند تأكيد وفتح واتساب؛ يجب إرسال الرسالة ليصل الطلب للمطعم." : "Contact details are saved in your browser for your next order. The cart clears when you confirm and open WhatsApp; send the message for the restaurant to receive your order.";
   document.querySelector("#checkoutSuccess .eyebrow").textContent = ar ? "الطلب جاهز للإرسال" : "Order prepared";
   document.querySelector("#checkoutSuccess h3").textContent = ar ? "أرسله إلى المطعم" : "Send it to the restaurant";
+  document.getElementById("orderSentButton").textContent = ar ? "أرسلت الطلب على واتساب" : "I sent the order on WhatsApp";
   document.querySelectorAll("#checkoutSuccess p")[2].textContent = ar ? "لا يصل الطلب إلى المطعم حتى تضغط إرسال في واتساب ويؤكده المطعم." : "Your order is not received until you press Send in WhatsApp and the restaurant confirms it.";
   document.querySelector(".cart-total > span").textContent = ar ? "الإجمالي" : "Total";
   setCheckoutStep(checkoutStep);
@@ -1549,7 +1573,11 @@ cartTrigger.addEventListener("click", () => openCart(1));
 document.getElementById("cartClose").addEventListener("click", () => cartDialog.close());
 document.getElementById("cartBrowse").addEventListener("click", () => { cartDialog.close(); document.getElementById("menu").scrollIntoView({ behavior: "smooth" }); });
 cartDialog.addEventListener("click", event => { if (event.target === cartDialog) cartDialog.close(); });
-cartDialog.addEventListener("close", () => document.body.classList.remove("is-locked"));
+cartDialog.addEventListener("close", () => {
+  document.body.classList.remove("is-locked");
+  resetOrderThanks();
+});
+document.getElementById("orderSentButton").addEventListener("click", showOrderThanks);
 cartItems.addEventListener("click", event => {
   const button = event.target.closest("button[data-cart-action]");
   const lineElement = event.target.closest("[data-cart-index]");

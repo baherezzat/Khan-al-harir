@@ -81,6 +81,30 @@ function storage() {
   return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value),
     removeItem: key => data.delete(key) };
 }
+test("thanks appears only after customer confirmation and closes after four seconds", () => {
+  const nodes = {checkoutSuccess: {hidden: false}, orderThanks: {hidden: true},
+    orderThanksTitle: {}, orderThanksMessage: {}};
+  let scheduled, delay, closed = false, cancelled = false;
+  const globals = {currentLanguage: "ar", orderThanksTimer: null,
+    document: {getElementById: id => nodes[id]},
+    cartDialog: {classList: {add() {}, remove() {}}, close: () => {closed = true;}},
+    window: {clearTimeout: () => {cancelled = true;},
+      setTimeout: (fn, ms) => {scheduled = fn; delay = ms; return 1;}}
+  };
+  const code = functionSource("resetOrderThanks", "updateCartLanguage");
+  run(code + "; showOrderThanks()", globals);
+  assert.equal(nodes.checkoutSuccess.hidden, true);
+  assert.equal(nodes.orderThanks.hidden, false);
+  assert.equal(nodes.orderThanksTitle.textContent, "شكرًا لطلبك من مطعمنا");
+  assert.equal(nodes.orderThanksMessage.textContent, "نتمنى لك وجبة سعيدة");
+  assert.equal(delay, 4000);
+  assert.equal(closed, false);
+  scheduled();
+  assert.equal(closed, true);
+  run(code + "; resetOrderThanks()", globals);
+  assert.equal(nodes.orderThanks.hidden, true);
+  assert.equal(cancelled, true);
+});
 test("cart is scoped to the tab while customer details persist in the browser", () => {
   const localStorage = storage();
   const sessionStorage = storage();

@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" href="assets/hero-shawarma.webp" as="image">
-  <link rel="stylesheet" href="style.css?v=20261103-compact-spacing">
+  <link rel="stylesheet" href="style.css?v=20261104-order-thanks">
   <script src="online-menu.js" defer></script>
-  <script src="script.js?v=20261104-session-cart" defer></script>
+  <script src="script.js?v=20261104-order-thanks" defer></script>
 </head>
 <body>
   <div id="fb-root"></div>
@@ -409,6 +409,13 @@
           <p id="successOrderNumber"></p>
           <p>Your order is not received until you press Send in WhatsApp and the restaurant confirms it.</p>
           <a class="button button-green" id="whatsappOrderLink" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>
+          <button class="button button-orange" id="orderSentButton" type="button">I sent the order</button>
+        </section>
+        <section class="order-thanks" id="orderThanks" role="status" aria-live="polite" hidden>
+          <div class="thanks-fireworks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <span class="success-mark" aria-hidden="true">✓</span>
+          <h3 id="orderThanksTitle">Thank you for ordering from our restaurant!</h3>
+          <p id="orderThanksMessage">We wish you a delicious meal.</p>
         </section>
       </div>
 
