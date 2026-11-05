@@ -378,6 +378,7 @@ let failedCategoryCount = 0;
 let lastMenuRefreshAt = 0;
 let lastMenuSignature = "";
 let menuRefreshInFlight = false;
+let menuSyncUnavailable = false;
 
 function categorySlug(category) {
   const english = category?.title?.en || `category-${category?.id || "menu"}`;
@@ -490,9 +491,14 @@ function productToMenuItem(product, category) {
   };
 }
 
-function officialMenuSignature(items) {
-  return JSON.stringify(items.map(item => [
+function officialMenuSignature(items, categories = menuCategories) {
+  return JSON.stringify([categories.map(category => [category.id, category.label, category.ar]), items.map(item => [
     item.id,
+    item.name,
+    item.arabic,
+    item.description,
+    item.descriptionAr,
+    item.category,
     item.image,
     item.price,
     item.oldPrice,
@@ -501,12 +507,14 @@ function officialMenuSignature(items) {
     item.priceOptions.map(option => [option.label, option.labelAr, option.price]),
     (item.customizationGroups || []).map(group => [
       group.id,
+      group.label,
+      group.labelAr,
       group.required,
       group.multiSelect,
       group.overridePrice,
       group.values.map(value => [value.id, value.label, value.labelAr, value.price])
     ])
-  ]));
+  ])]);
 }
 
 function updateMenuSourceMessage() {
@@ -515,6 +523,13 @@ function updateMenuSourceMessage() {
   element.textContent = currentLanguage === "ar"
     ? "المطبخ الحلبي حكاية من النكهات العريقة والكرم الذي يجمع الأحبة حول السفرة."
     : "Halaby cuisine is a story of timeless flavors and generous tables that bring loved ones together.";
+  const notice = document.getElementById("menuSyncNotice");
+  if (notice) {
+    notice.hidden = !menuSyncUnavailable;
+    notice.textContent = currentLanguage === "ar"
+      ? "تعذر تحديث المنيو الآن. نعرض آخر نسخة متاحة ونحاول مجددًا تلقائيًا؛ يرجى تأكيد الأسعار مع المطعم."
+      : "The menu could not refresh. Showing the last available version and retrying automatically; please confirm prices with the restaurant.";
+  }
 }
 
 function readOfficialMenuCache() {
@@ -569,7 +584,7 @@ async function fetchJSON(url) {
   let lastError;
   for (let attempt = 0; attempt <= MENU_REQUEST_RETRIES; attempt += 1) {
     try {
-      const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json" } });
+      const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(url === "/api/menu" ? 55000 : 12000), headers: { Accept: "application/json" } });
       if (!response.ok) {
         const retryable = response.status === 429 || response.status >= 500;
         if (!retryable || attempt === MENU_REQUEST_RETRIES) throw new Error(`Menu request failed (${response.status})`);
@@ -596,7 +611,7 @@ async function fetchJSON(url) {
 async function fetchOfficialMenuBundle(apiBase, branchId) {
   try {
     const bundle = await fetchJSON("/api/menu");
-    if (Array.isArray(bundle?.categories) && bundle.categories.length) return bundle;
+    if (Array.isArray(bundle?.categories)) return bundle;
   } catch (_) {
     // Fall back to the official public API if the shared cache is unavailable.
   }
@@ -722,17 +737,17 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
       });
     }
 
-    if (failedCategoryIds.size && cachedMenu) {
-      loadedItems.push(...cachedMenu.items.filter(item => failedCategoryIds.has(item.category)));
-    }
-    if (!loadedItems.length) throw new Error("The official menu returned no products");
-    const nextSignature = officialMenuSignature(loadedItems);
+    if (failedCategoryIds.size) throw new Error("Menu update is incomplete");
+    const nextSignature = officialMenuSignature(loadedItems, nextCategories);
     const menuChanged = nextSignature !== lastMenuSignature;
     applyOfficialMenu(nextCategories, loadedItems, { preserveView });
+    menuSyncUnavailable = false;
     if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems, officialBranchInfo);
     updateMenuSourceMessage();
     if (menuChanged || !preserveView) renderMenu();
   } catch (error) {
+    menuSyncUnavailable = true;
+    updateMenuSourceMessage();
     if (menuItems.length) {
       console.warn("Official menu background refresh failed", error);
       return;
