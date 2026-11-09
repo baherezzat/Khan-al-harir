@@ -1065,6 +1065,15 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   .site-footer { padding-block: 26px 22px; }
 }
 
+/* Let the mobile photo determine its row height, without a letterbox gap. */
+@media (max-width: 899px) {
+  .menu-detail-frame { align-content: start; }
+  .menu-detail-media { display: grid; justify-items: center; height: auto; padding: 0; }
+  .menu-detail-media img { display: block; width: auto; height: auto; max-width: 100%; max-height: clamp(160px, 28dvh, 240px); }
+  .menu-detail-copy { padding-top: 4px; }
+  .menu-detail-copy h2 { margin-top: 4px; }
+}
+
 /* Preserve the complete family-table artwork and Arabic lettering. */
 #about .about-image-wrap { min-height: 0; aspect-ratio: 2 / 1; align-self: center; }
 #about .about-image-wrap img { object-fit: contain; }
