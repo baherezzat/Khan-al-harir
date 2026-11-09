@@ -1074,6 +1074,17 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   .menu-detail-copy h2 { margin-top: 4px; }
 }
 
+/* Keep purchasing controls outside the scrolling dish details. */
+.menu-detail-frame { height: min(820px, calc(100dvh - 24px)); grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
+.menu-detail-copy { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.menu-detail-frame > .menu-detail-price-wrap { margin: 0; padding: 10px 16px; background: var(--p-paper); }
+@media (min-width: 900px) {
+  .menu-detail-frame { height: min(720px, calc(100dvh - 24px)); grid-template-rows: minmax(0, 1fr) auto; }
+  .menu-detail-media { grid-row: 1 / 3; }
+  .menu-detail-copy { grid-column: 2; grid-row: 1; }
+  .menu-detail-frame > .menu-detail-price-wrap { grid-column: 2; grid-row: 2; padding-inline: 30px; }
+}
+
 /* Preserve the complete family-table artwork and Arabic lettering. */
 #about .about-image-wrap { min-height: 0; aspect-ratio: 2 / 1; align-self: center; }
 #about .about-image-wrap img { object-fit: contain; }
