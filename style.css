@@ -1065,6 +1065,10 @@ html[dir="rtl"] .menu-card-options-badge { right: auto; left: 9px; }
   .site-footer { padding-block: 26px 22px; }
 }
 
+/* Preserve the complete family-table artwork and Arabic lettering. */
+#about .about-image-wrap { min-height: 0; aspect-ratio: 2 / 1; align-self: center; }
+#about .about-image-wrap img { object-fit: contain; }
+
 /* Native-size cartoon shawarma cursor for mouse users throughout the site. */
 @media (hover: hover) and (pointer: fine) {
   html, body, body * {
