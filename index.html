@@ -13,7 +13,7 @@
   <link rel="preload" href="assets/hero-shawarma.webp" as="image">
   <link rel="stylesheet" href="style.css?v=20261104-order-thanks">
   <script src="online-menu.js" defer></script>
-  <script src="script.js?v=20261105-menu-sync" defer></script>
+  <script src="script.js?v=20261109-flexible-pickup" defer></script>
 </head>
 <body>
   <div id="fb-root"></div>
@@ -371,7 +371,8 @@
             <label><span>Egyptian mobile number</span><input id="customerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required></label>
             <div class="pickup-fields" id="pickupFields">
               <label><span>Branch</span><select id="pickupBranch"><option value="Banafseg, First Settlement">Banafseg, First Settlement</option></select></label>
-              <label><span>Pickup time</span><select id="pickupTime"><option value="As soon as possible">As soon as possible</option><option value="In 30 minutes">In 30 minutes</option><option value="In 45 minutes">In 45 minutes</option><option value="In 60 minutes">In 60 minutes</option></select></label>
+              <label><span>Pickup time</span><select id="pickupTime"><option value="As soon as possible">As soon as possible</option><option value="In 30 minutes">In 30 minutes</option><option value="In 45 minutes">In 45 minutes</option><option value="In 60 minutes">In 60 minutes</option><option value="scheduled">Choose a date and time</option></select></label>
+              <label class="field-wide" id="pickupScheduleField" hidden><b id="pickupScheduleLabel">Pickup date and time (Cairo time)</b><input id="pickupDateTime" type="datetime-local" step="60" aria-describedby="pickupScheduleNote"><small id="pickupScheduleNote">Requested time is subject to restaurant confirmation.</small></label>
             </div>
             <div class="delivery-fields" id="deliveryFields" hidden>
               <label><span>Area</span><input id="deliveryArea" maxlength="80" placeholder="Area / district"></label>

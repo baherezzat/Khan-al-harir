@@ -1378,7 +1378,7 @@ function customerData() {
     name: document.getElementById("customerName").value.trim(),
     phone: document.getElementById("customerPhone").value.trim(),
     fulfilment: selectedFulfilment(), branch: document.getElementById("pickupBranch").value,
-    pickupTime: document.getElementById("pickupTime").value,
+    pickupTime: pickupTimeLabel(),
     area: document.getElementById("deliveryArea").value.trim(), street: document.getElementById("deliveryStreet").value.trim(),
     floor: document.getElementById("deliveryFloor").value.trim(), apartment: document.getElementById("deliveryApartment").value.trim(),
     landmark: document.getElementById("deliveryLandmark").value.trim(), map: document.getElementById("deliveryMap").value.trim(),
@@ -1387,7 +1387,7 @@ function customerData() {
 }
 
 function saveCustomerDraft() {
-  const { orderNote, ...details } = customerData();
+  const { orderNote, pickupTime, ...details } = customerData();
   try { localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(details)); } catch (_) { /* optional */ }
 }
 
@@ -1404,10 +1404,36 @@ function validateDetails() {
   if (!data.name) message = currentLanguage === "ar" ? "اكتب اسمك من فضلك." : "Please enter your name.";
   else if (!validEgyptianPhone(data.phone)) message = currentLanguage === "ar" ? "اكتب رقم موبايل مصري صحيحًا من 11 رقمًا." : "Enter a valid 11-digit Egyptian mobile number.";
   else if (data.fulfilment === "delivery" && (!data.area || !data.street)) message = currentLanguage === "ar" ? "اكتب المنطقة والشارع ورقم العمارة للتوصيل." : "Enter the delivery area, street, and building number.";
+  else if (pickupScheduleInvalid()) message = currentLanguage === "ar" ? "اختر تاريخ ووقت استلام قادمًا بتوقيت القاهرة." : "Choose a future pickup date and time in Cairo time.";
   checkoutError.textContent = message;
   checkoutError.hidden = !message;
   if (!message) saveCustomerDraft();
   return !message;
+}
+
+function cairoLocalMinute(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const value = type => parts.find(part => part.type === type).value;
+  return `${value("year")}-${value("month")}-${value("day")}T${value("hour")}:${value("minute")}`;
+}
+
+function pickupScheduleInvalid() {
+  if (selectedFulfilment() !== "pickup" || document.getElementById("pickupTime").value !== "scheduled") return false;
+  const input = document.getElementById("pickupDateTime");
+  return !input.value || !input.validity.valid || input.value <= cairoLocalMinute();
+}
+
+function pickupTimeLabel() {
+  const value = document.getElementById("pickupTime").value;
+  if (value !== "scheduled") return value;
+  const date = document.getElementById("pickupDateTime").value.replace("T", " ");
+  return `${date} (${currentLanguage === "ar" ? "بتوقيت القاهرة — بانتظار تأكيد المطعم" : "Cairo time — subject to restaurant confirmation"})`;
+}
+
+function updatePickupSchedule() {
+  const scheduled = document.getElementById("pickupTime").value === "scheduled";
+  document.getElementById("pickupScheduleField").hidden = !scheduled;
+  document.getElementById("pickupDateTime").min = cairoLocalMinute();
 }
 
 function isRestaurantOpenNow() {
@@ -1455,6 +1481,11 @@ function buildWhatsAppMessage(orderNumber) {
 
 function confirmOrder() {
   if (!cart.length) return;
+  if (pickupScheduleInvalid()) {
+    setCheckoutStep(2);
+    validateDetails();
+    return;
+  }
   if (!document.getElementById("confirmAccuracy").checked) {
     confirmError.textContent = currentLanguage === "ar" ? "أكد أنك راجعت الطلب وبيانات التواصل." : "Please confirm that you reviewed the order and contact details.";
     confirmError.hidden = false;
@@ -1487,6 +1518,9 @@ function clearSubmittedDraft() {
   } catch (_) { /* the in-memory draft is still cleared */ }
   document.querySelectorAll("#orderNote, #menuItemNote")
     .forEach(input => { input.value = ""; });
+  document.getElementById("pickupTime").value = "As soon as possible";
+  document.getElementById("pickupDateTime").value = "";
+  updatePickupSchedule();
   saveCustomerDraft();
   document.getElementById("confirmAccuracy").checked = false;
   document.getElementById("orderReview").replaceChildren();
@@ -1562,8 +1596,11 @@ function updateCartLanguage() {
     ar ? "في أقرب وقت" : "As soon as possible",
     ar ? "خلال ٣٠ دقيقة" : "In 30 minutes",
     ar ? "خلال ٤٥ دقيقة" : "In 45 minutes",
-    ar ? "خلال ٦٠ دقيقة" : "In 60 minutes"
+    ar ? "خلال ٦٠ دقيقة" : "In 60 minutes",
+    ar ? "اختار اليوم والساعة" : "Choose a date and time"
   ].forEach((label, index) => { if (pickupOptions[index]) pickupOptions[index].textContent = label; });
+  document.getElementById("pickupScheduleLabel").textContent = ar ? "تاريخ ووقت الاستلام (بتوقيت القاهرة)" : "Pickup date and time (Cairo time)";
+  document.getElementById("pickupScheduleNote").textContent = ar ? "الموعد الذي تختاره يخضع لتأكيد المطعم." : "Requested time is subject to restaurant confirmation.";
   document.getElementById("hoursNotice").textContent = ar ? "تُستقبل الطلبات خلال مواعيد العمل: يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "Orders are accepted during restaurant hours: daily 9:00 AM–4:00 AM.";
   document.querySelector(".payment-choice legend").textContent = ar ? "طريقة الدفع" : "Payment method";
   const paymentLabels = document.querySelectorAll(".payment-choice label");
@@ -1606,6 +1643,8 @@ cartItems.addEventListener("click", event => {
   saveCart(); renderCart();
 });
 document.querySelectorAll('input[name="fulfilment"]').forEach(input => input.addEventListener("change", updateFulfilmentFields));
+document.getElementById("pickupTime").addEventListener("change", updatePickupSchedule);
+document.getElementById("pickupDateTime").addEventListener("focus", updatePickupSchedule);
 document.querySelectorAll("#customerName, #customerPhone, #pickupBranch, #pickupTime, #deliveryArea, #deliveryStreet, #deliveryFloor, #deliveryApartment, #deliveryLandmark, #deliveryMap, #orderNote").forEach(input => input.addEventListener("change", saveCustomerDraft));
 checkoutBack.addEventListener("click", () => setCheckoutStep(checkoutStep - 1));
 checkoutNext.addEventListener("click", () => {
@@ -1619,7 +1658,7 @@ checkoutNext.addEventListener("click", () => {
 });
 
 const savedCustomer = readStoredJSON(CUSTOMER_STORAGE_KEY, {});
-Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, pickupTime: savedCustomer.pickupTime, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map }).forEach(([id, value]) => {
+Object.entries({ customerName: savedCustomer.name, customerPhone: savedCustomer.phone, deliveryArea: savedCustomer.area, deliveryStreet: savedCustomer.street, deliveryFloor: savedCustomer.floor, deliveryApartment: savedCustomer.apartment, deliveryLandmark: savedCustomer.landmark, deliveryMap: savedCustomer.map }).forEach(([id, value]) => {
   if (value && document.getElementById(id)) document.getElementById(id).value = value;
 });
 if (["pickup", "delivery"].includes(savedCustomer.fulfilment)) {

@@ -120,7 +120,8 @@ test("cart is scoped to the tab while customer details persist in the browser", 
 test("handoff clears cart and order notes while retaining customer details and message retry link", () => {
   const localStorage = storage(), sessionStorage = storage();
   const nodes = { confirmAccuracy: {checked: true}, orderReview: {replaceChildren() {}},
-    whatsappOrderLink: {}, successOrderNumber: {}, checkoutSuccess: {hidden: true} };
+    whatsappOrderLink: {}, successOrderNumber: {}, checkoutSuccess: {hidden: true},
+    pickupTime: {value: "scheduled"}, pickupDateTime: {value: "2027-01-01T12:00"} };
   const notes = [{value: "no salt"}, {value: "extra sauce"}];
   let opened;
   const globals = {
@@ -130,6 +131,7 @@ test("handoff clears cart and order notes while retaining customer details and m
     customerData: () => ({name: "Customer", phone: "01012345678", orderNote: notes[0].value}),
     document: {getElementById: id => nodes[id], querySelectorAll: selector => selector === ".checkout-panel" ? [] : notes},
     isRestaurantOpenNow: () => true, createOrderNumber: () => "TEST",
+    pickupScheduleInvalid: () => false, updatePickupSchedule() {},
     buildWhatsAppMessage: () => "2 chicken orders",
     window: {open: url => {opened = url;}}
   };
@@ -146,4 +148,20 @@ test("handoff clears cart and order notes while retaining customer details and m
   assert.equal(nodes.whatsappOrderLink.href, opened);
   assert.ok(opened.includes(encodeURIComponent("2 chicken orders")));
   assert.equal(nodes.checkoutSuccess.hidden, false);
+  assert.equal(nodes.pickupDateTime.value, "");
+  assert.equal(nodes.pickupTime.value, "As soon as possible");
+});
+
+test("pickup uses Cairo time and rejects missing or past custom times", () => {
+  const code = functionSource("cairoLocalMinute", "isRestaurantOpenNow");
+  const nodes = {pickupTime:{value:"scheduled"},pickupDateTime:{value:"",validity:{valid:true}}};
+  const globals = {document:{getElementById:id=>nodes[id]}, selectedFulfilment:()=>"pickup", currentLanguage:"ar"};
+  assert.equal(run(code + '; cairoLocalMinute(new Date("2026-11-09T10:00:00Z"))'),"2026-11-09T12:00");
+  assert.equal(run(code + "; pickupScheduleInvalid()",globals),true);
+  nodes.pickupDateTime.value="2020-01-01T12:00";
+  assert.equal(run(code + "; pickupScheduleInvalid()",globals),true);
+  nodes.pickupDateTime.value="2099-01-01T12:00";
+  assert.equal(run(code + "; pickupScheduleInvalid()",globals),false);
+  assert.ok(run(code + "; pickupTimeLabel()",globals).includes("2099-01-01 12:00"));
+  assert.equal(run(code + "; pickupScheduleInvalid()",{...globals,selectedFulfilment:()=>"delivery"}),false);
 });
