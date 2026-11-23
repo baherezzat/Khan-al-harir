@@ -1015,16 +1015,34 @@ function nextMenuCategory() {
 
 let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
+let categoryTransitionSerial = 0;
 function goToMenuCategory(category) {
-  categoryTransitionUntil = Date.now() + 1000;
-  state.query = "";
-  menuSearch.value = "";
-  chooseCategory(category);
+  const serial = ++categoryTransitionSerial;
+  categoryTransitionUntil = Infinity;
+  const startY = window.scrollY;
   const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
-  window.scrollTo({top: Math.max(0, top), behavior: "instant"});
-  previousMenuScroll = window.scrollY;
-  const active = categoryFilters.querySelector('[aria-pressed="true"]');
-  if (active) categoryFilters.scrollLeft += active.getBoundingClientRect().left - categoryFilters.getBoundingClientRect().left;
+  const targetY = Math.max(0, top);
+  const duration = prefersReducedMotion.matches ? 0 : 650;
+  const started = performance.now();
+  function finish() {
+    state.query = "";
+    menuSearch.value = "";
+    chooseCategory(category);
+    window.scrollTo({top: targetY, behavior: "instant"});
+    previousMenuScroll = window.scrollY;
+    categoryTransitionUntil = Date.now() + 600;
+    const active = categoryFilters.querySelector('[aria-pressed="true"]');
+    if (active) categoryFilters.scrollLeft += active.getBoundingClientRect().left - categoryFilters.getBoundingClientRect().left;
+  }
+  function frame(now) {
+    if (serial !== categoryTransitionSerial) return;
+    const progress = duration ? Math.min(1, (now - started) / duration) : 1;
+    const eased = 1 - Math.pow(1 - progress, 3);
+    window.scrollTo({top: startY + (targetY - startY) * eased, behavior: "instant"});
+    if (progress < 1) requestAnimationFrame(frame);
+    else finish();
+  }
+  requestAnimationFrame(frame);
 }
 
 window.addEventListener("scroll", () => {
