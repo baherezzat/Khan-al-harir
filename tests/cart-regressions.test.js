@@ -133,7 +133,7 @@ test("handoff clears cart and order notes while retaining customer details and m
     isRestaurantOpenNow: () => true, createOrderNumber: () => "TEST",
     pickupScheduleInvalid: () => false, updatePickupSchedule() {},
     buildWhatsAppMessage: () => "2 chicken orders",
-    window: {open: url => {opened = url;}}
+    window: {location: {assign: url => {opened = url;}}, open() {throw new Error("Checkout must not open an extra tab");}}
   };
   sessionStorage.setItem("cart", JSON.stringify([validLine]));
   const code = functionSource("saveCustomerDraft", "validEgyptianPhone") +

@@ -1592,7 +1592,7 @@ function confirmOrder() {
   cartFoot.hidden = true;
   checkoutNext.disabled = false;
   clearSubmittedDraft();
-  window.open(url, "_blank", "noopener,noreferrer");
+  window.location.assign(url);
 }
 
 function clearSubmittedDraft() {
