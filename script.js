@@ -890,6 +890,8 @@ function normalizeText(value) {
 function filteredItems() {
   const query = normalizeText(state.query);
   return menuItems.filter(item => {
+    const inCategory = state.category === "all" || item.category === state.category;
+    if (!inCategory) return false;
     if (!query) return true;
     const searchable = normalizeText(`${item.name} ${item.arabic} ${item.description} ${item.descriptionAr} ${arabicMenuDescriptions[item.category]} ${categoryLabels[item.category]} ${categoryLabelsAr[item.category]}`);
     return searchable.includes(query);
@@ -977,47 +979,40 @@ function renderCategories() {
   });
 }
 
-function continuousMenuMarkup(items) {
-  const groups = new Map();
-  for (const category of menuCategories) groups.set(category.id, []);
-  for (const item of items) {
-    if (!groups.has(item.category)) groups.set(item.category, []);
-    groups.get(item.category).push(item);
-  }
-  return [...groups].filter(([, dishes]) => dishes.length).map(([category, dishes]) =>
-    `<h3 class="menu-section-title" data-menu-category="${escapeHTML(category)}">${escapeHTML(currentCategoryLabel(category))}</h3>` + dishes.map(menuCard).join("")
-  ).join("");
-}
-
 function renderMenu() {
   const matches = filteredItems();
-  menuGrid.innerHTML = continuousMenuMarkup(matches);
+  const visibleItems = matches.slice(0, state.visible);
+  menuGrid.innerHTML = visibleItems.map(menuCard).join("");
   emptyState.hidden = menuLoadState === "loading" || matches.length !== 0;
   menuGrid.hidden = matches.length === 0;
   clearSearch.hidden = state.query.length === 0;
 
-  const context = currentLanguage === "ar" ? "طبقًا" : "dishes";
+  const context = state.category === "all"
+    ? (currentLanguage === "ar" ? "طبقًا" : "dishes")
+    : currentCategoryLabel(state.category).toLowerCase();
   menuCount.textContent = matches.length === 0
     ? (currentLanguage === "ar" ? "لم نعثر على أطباق" : "No dishes found")
     : currentLanguage === "ar"
-      ? `نعرض ${matches.length} — ${context}`
-      : `Showing ${matches.length} ${context}`;
+      ? `نعرض ${visibleItems.length} من ${matches.length} — ${context}`
+      : `Showing ${visibleItems.length} of ${matches.length} ${context}`;
 
-  showMore.hidden = true;
-  showMore.parentElement.hidden = true;
+  showMore.hidden = matches.length === 0 || state.visible >= matches.length;
+  if (!showMore.hidden) {
+    const remaining = matches.length - state.visible;
+    showMore.textContent = currentLanguage === "ar"
+      ? `عرض أطباق أخرى (${Math.min(PAGE_SIZE, remaining)} من ${remaining})`
+      : `Show more dishes (${Math.min(PAGE_SIZE, remaining)} of ${remaining})`;
+  }
   renderCategories();
 }
 
 function chooseCategory(category, shouldScroll = false) {
   state.category = category === "all" || categoryLabels[category] ? category : "all";
-  state.query = "";
-  menuSearch.value = "";
   state.visible = PAGE_SIZE;
   renderMenu();
-  const heading = [...menuGrid.querySelectorAll("[data-menu-category]")]
-    .find(node => node.dataset.menuCategory === state.category);
-  const target = heading || document.getElementById("menu");
-  target.scrollIntoView({ behavior: prefersReducedMotion.matches ? "auto" : "smooth", block: "start" });
+  if (shouldScroll) {
+    document.getElementById("menu").scrollIntoView({ behavior: prefersReducedMotion.matches ? "auto" : "smooth" });
+  }
 }
 
 categoryFilters.addEventListener("click", event => {

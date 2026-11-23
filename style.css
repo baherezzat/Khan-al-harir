@@ -409,9 +409,6 @@ h2 em, h1 em { font-weight: 400; }
 .category-filters button:active { transform: scale(.97); }
 .category-filters button[aria-pressed="true"] { border-color: var(--p-green); background: var(--p-green); color: var(--p-paper); }
 .menu-grid { display: grid; gap: 16px; }
-.menu-section-title { grid-column: 1 / -1; margin: 16px 0 0; padding: 10px 0; border-bottom: 1px solid var(--p-line); color: var(--p-green-deep); font-size: 24px; line-height: 1.4; scroll-margin-top: 120px; }
-.menu-section-title:first-child { margin-top: 0; }
-.menu-more-wrap[hidden] { display: none; }
 .menu-card {
   display: flex;
   min-width: 0;
