@@ -20,12 +20,14 @@ test('first load starts with offers and refresh preserves manually selected all 
   assert.equal(context.state.category,'all');
 });
 const code = source.slice(source.indexOf('let categoryTransitionUntil ='), source.indexOf('window.addEventListener("scroll", () => {', source.indexOf('let categoryTransitionUntil =')));
-test('automatic return starts at section end and blocks competing scroll only during animation', () => {
+test('last dish remains selectable until time and further downward scroll both pass', () => {
   const listeners = {}, timers = new Map(), frames = [];
   let timerId = 0;
+  let now = 2000;
   const end = source.indexOf('function chooseCategory(', source.indexOf('let categoryTransitionUntil ='));
   const fullCode = source.slice(source.indexOf('let categoryTransitionUntil ='), end);
   const context = {
+    Date: {now:()=>now},
     window: {scrollY: 1000, innerHeight:800, addEventListener(type, fn) {listeners[type]=fn;}},
     document: {addEventListener(type, fn) {listeners[type]=fn;}, documentElement:{classList:{add(){},remove(){}}},
       querySelector: selector => selector === 'dialog[open]' ? null : {getBoundingClientRect:()=>({top:-500})}},
@@ -41,7 +43,13 @@ test('automatic return starts at section end and blocks competing scroll only du
   listeners.touchmove({cancelable:true,preventDefault(){blocked++;}});
   assert.equal(blocked,0,'normal scrolling remains available');
   context.window.scrollY=1100; listeners.scroll();
-  assert.equal(frames.length,1,'start immediately at end without waiting for touch release');
+  assert.equal(frames.length,0,'showing the last dish must not trigger return');
+  context.window.scrollY=1300; listeners.scroll();
+  assert.equal(frames.length,0,'fast swipe must still allow reading the last dish');
+  now += 2000;
+  assert.equal(frames.length,0,'waiting alone must not interrupt choosing the last dish');
+  context.window.scrollY=1310; listeners.scroll();
+  assert.equal(frames.length,1,'return only after time and further scroll');
   listeners.touchmove({cancelable:true,preventDefault(){blocked++;}});
   assert.equal(blocked,1,'touch scroll cannot fight the return');
   vm.runInContext('cancelCategoryTransition();',context);
@@ -68,6 +76,8 @@ test('scroll reaches the top before changing category and reduced motion still w
       queue.shift()(1800);
       assert.equal(events.some(event => event[0] === 'category'), false, 'slower return must still be running at 1.8 seconds');
       queue.shift()(3800);
+      assert.equal(events.some(event => event[0] === 'category'), false, 'very slow return lasts beyond 3.8 seconds');
+      queue.shift()(6500);
     }
     const changed = events.findIndex(event => event[0] === 'category');
     assert.deepEqual(events[changed - 1], ['scroll', 388]);

@@ -1007,8 +1007,8 @@ function renderMenu() {
   showMore.hidden = !next || Boolean(state.query.trim()) || matches.length === 0;
   if (!showMore.hidden) {
     showMore.textContent = currentLanguage === "ar"
-      ? `تابع النزول إلى ${currentCategoryLabel(next)} ↓`
-      : `Keep scrolling to ${currentCategoryLabel(next)} ↓`;
+      ? `انتهى القسم — تابع النزول إلى ${currentCategoryLabel(next)} ↓`
+      : `End of section — keep scrolling to ${currentCategoryLabel(next)} ↓`;
   }
   document.getElementById("currentCategoryTitle").textContent = state.category === "all"
     ? (currentLanguage === "ar" ? "كل الأطباق" : "All dishes") : currentCategoryLabel(state.category);
@@ -1024,6 +1024,7 @@ let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
 let categoryTransitionSerial = 0;
 let categoryScrollTimer;
+let categoryEndReached = null;
 function cancelCategoryTransition() {
   clearTimeout(categoryScrollTimer);
   document.documentElement.classList.remove("is-changing-menu-category");
@@ -1048,6 +1049,7 @@ document.addEventListener("click", event => {
   if (event.target.closest('a[href^="#"]')) cancelCategoryTransition();
 });
 function goToMenuCategory(category) {
+  categoryEndReached = null;
   clearTimeout(categoryScrollTimer);
   const serial = ++categoryTransitionSerial;
   categoryTransitionUntil = Infinity;
@@ -1055,7 +1057,7 @@ function goToMenuCategory(category) {
   const startY = window.scrollY;
   const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
   const targetY = Math.max(0, top);
-  const duration = prefersReducedMotion.matches ? 0 : Math.min(3800, Math.max(2400, Math.abs(startY - targetY) * .8));
+  const duration = prefersReducedMotion.matches ? 0 : Math.min(6500, Math.max(4500, Math.abs(startY - targetY) * 1.2));
   const started = performance.now();
   function finish() {
     state.query = "";
@@ -1083,17 +1085,24 @@ window.addEventListener("scroll", () => {
   clearTimeout(categoryScrollTimer);
   const goingDown = window.scrollY > previousMenuScroll + 1;
   previousMenuScroll = window.scrollY;
-  if (!goingDown || Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
+  if (!goingDown) { categoryEndReached = null; return; }
+  if (Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) { categoryEndReached = null; return; }
   const next = nextMenuCategory();
   const last = menuGrid.lastElementChild;
   if (!next || !last || menuGrid.hidden) return;
   const bottom = last.getBoundingClientRect().bottom;
-  if (bottom <= window.innerHeight - 20 && bottom > siteHeader.getBoundingClientRect().height) {
-    goToMenuCategory(next);
+  if (bottom > window.innerHeight - 20) { categoryEndReached = null; return; }
+  // Keep the last dish available: reaching it only arms the transition.
+  // Require time to read it AND a further downward scroll, never a timer-only jump.
+  if (!categoryEndReached || categoryEndReached.last !== last || categoryEndReached.category !== state.category) {
+    categoryEndReached = {last, category: state.category, time: Date.now(), y: window.scrollY};
+    return;
   }
+  if (Date.now() - categoryEndReached.time >= 1800 && window.scrollY - categoryEndReached.y >= 140 && bottom <= window.innerHeight - 160) goToMenuCategory(next);
 }, {passive: true});
 
 function chooseCategory(category, shouldScroll = false) {
+  categoryEndReached = null;
   state.defaultCategoryPending = false;
   state.category = category === "all" || categoryLabels[category] ? category : "all";
   state.visible = PAGE_SIZE;
