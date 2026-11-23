@@ -1024,7 +1024,6 @@ let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
 let categoryTransitionSerial = 0;
 let categoryScrollTimer;
-let categoryEndReached = null;
 function cancelCategoryTransition() {
   clearTimeout(categoryScrollTimer);
   document.documentElement.classList.remove("is-changing-menu-category");
@@ -1049,7 +1048,6 @@ document.addEventListener("click", event => {
   if (event.target.closest('a[href^="#"]')) cancelCategoryTransition();
 });
 function goToMenuCategory(category) {
-  categoryEndReached = null;
   clearTimeout(categoryScrollTimer);
   const serial = ++categoryTransitionSerial;
   categoryTransitionUntil = Infinity;
@@ -1057,7 +1055,7 @@ function goToMenuCategory(category) {
   const startY = window.scrollY;
   const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
   const targetY = Math.max(0, top);
-  const duration = prefersReducedMotion.matches ? 0 : Math.min(6500, Math.max(4500, Math.abs(startY - targetY) * 1.2));
+  const duration = prefersReducedMotion.matches ? 0 : Math.min(10000, Math.max(8000, Math.abs(startY - targetY) * 2));
   const started = performance.now();
   function finish() {
     state.query = "";
@@ -1085,24 +1083,17 @@ window.addEventListener("scroll", () => {
   clearTimeout(categoryScrollTimer);
   const goingDown = window.scrollY > previousMenuScroll + 1;
   previousMenuScroll = window.scrollY;
-  if (!goingDown) { categoryEndReached = null; return; }
-  if (Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) { categoryEndReached = null; return; }
+  if (!goingDown) return;
+  if (Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
   const next = nextMenuCategory();
   const last = menuGrid.lastElementChild;
-  if (!next || !last || menuGrid.hidden) return;
-  const bottom = last.getBoundingClientRect().bottom;
-  if (bottom > window.innerHeight - 20) { categoryEndReached = null; return; }
-  // Keep the last dish available: reaching it only arms the transition.
-  // Require time to read it AND a further downward scroll, never a timer-only jump.
-  if (!categoryEndReached || categoryEndReached.last !== last || categoryEndReached.category !== state.category) {
-    categoryEndReached = {last, category: state.category, time: Date.now(), y: window.scrollY};
-    return;
-  }
-  if (Date.now() - categoryEndReached.time >= 1800 && window.scrollY - categoryEndReached.y >= 140 && bottom <= window.innerHeight - 160) goToMenuCategory(next);
+  if (!next || !last || menuGrid.hidden || showMore.hidden) return;
+  // Trigger when the end-of-section label itself becomes readable, after the dishes.
+  const marker = showMore.getBoundingClientRect();
+  if (marker.top + marker.height / 2 <= window.innerHeight && marker.bottom > siteHeader.getBoundingClientRect().height) goToMenuCategory(next);
 }, {passive: true});
 
 function chooseCategory(category, shouldScroll = false) {
-  categoryEndReached = null;
   state.defaultCategoryPending = false;
   state.category = category === "all" || categoryLabels[category] ? category : "all";
   state.visible = PAGE_SIZE;
