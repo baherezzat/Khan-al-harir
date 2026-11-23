@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source = readFileSync(new URL('../script.js', import.meta.url), 'utf8');
+test('first load starts with offers and refresh preserves manually selected all dishes', () => {
+  const selectionCode = source.slice(source.indexOf('function defaultMenuCategory('), source.indexOf('function wait('));
+  const context = {
+    state: {category:'all',visible:12,defaultCategoryPending:true}, PAGE_SIZE:12,
+    menuCategories:[], menuItems:[], categoryLabels:{}, categoryLabelsAr:{}, lastMenuSignature:'', menuLoadState:'loading',
+    officialMenuSignature:()=>'',
+    categories:[{id:'shawarma',label:'Shawarma'},{id:'offers',ar:'عروض'},{id:'drinks',label:'Drinks'}],
+    items:[{category:'shawarma'},{category:'offers'},{category:'drinks'}]
+  };
+  vm.createContext(context);
+  vm.runInContext(selectionCode+'; applyOfficialMenu(categories, items, {preserveView:true});', context);
+  assert.equal(context.state.category,'offers');
+  context.state.category='all';
+  vm.runInContext('applyOfficialMenu(categories, items, {preserveView:true});', context);
+  assert.equal(context.state.category,'all');
+});
 const code = source.slice(source.indexOf('let categoryTransitionUntil ='), source.indexOf('window.addEventListener("scroll", () => {', source.indexOf('let categoryTransitionUntil =')));
 test('scroll reaches the top before changing category and reduced motion still works', () => {
   for (const reduced of [false, true]) {

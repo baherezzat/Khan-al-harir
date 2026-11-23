@@ -561,6 +561,12 @@ function writeOfficialMenuCache(categories, items, branch) {
   }
 }
 
+function defaultMenuCategory(categories = menuCategories, items = menuItems) {
+  const available = categories.filter(category => items.some(item => item.category === category.id));
+  const offers = available.find(category => /عروض|offers?/i.test(`${category.ar || ""} ${category.label || ""}`));
+  return (offers || available[0])?.id || "all";
+}
+
 function applyOfficialMenu(categories, items, { preserveView = false } = {}) {
   const previousCategory = state.category;
   const previousVisible = state.visible;
@@ -570,9 +576,10 @@ function applyOfficialMenu(categories, items, { preserveView = false } = {}) {
   menuItems = items;
   lastMenuSignature = officialMenuSignature(items);
   menuLoadState = "loaded";
-  state.category = preserveView && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
+  state.category = preserveView && !state.defaultCategoryPending && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
     ? previousCategory
-    : "all";
+    : defaultMenuCategory(categories, items);
+  state.defaultCategoryPending = false;
   state.visible = preserveView ? Math.max(PAGE_SIZE, previousVisible) : PAGE_SIZE;
 }
 
@@ -848,7 +855,7 @@ function setLanguage(language, persist = true) {
   }
 }
 
-const state = { category: "all", query: "", visible: PAGE_SIZE };
+const state = { category: "all", query: "", visible: PAGE_SIZE, defaultCategoryPending: true };
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const desktopMedia = window.matchMedia("(min-width: 900px)");
 
@@ -1057,6 +1064,7 @@ window.addEventListener("scroll", () => {
 }, {passive: true});
 
 function chooseCategory(category, shouldScroll = false) {
+  state.defaultCategoryPending = false;
   state.category = category === "all" || categoryLabels[category] ? category : "all";
   state.visible = PAGE_SIZE;
   renderMenu();
@@ -1086,7 +1094,7 @@ clearSearch.addEventListener("click", () => {
 
 resetFilters.addEventListener("click", () => {
   state.query = "";
-  state.category = "all";
+  state.category = defaultMenuCategory();
   state.visible = PAGE_SIZE;
   menuSearch.value = "";
   renderMenu();
