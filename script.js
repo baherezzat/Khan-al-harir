@@ -1024,10 +1024,6 @@ let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
 let categoryTransitionSerial = 0;
 let categoryScrollTimer;
-let categoryTouchActive = false;
-document.addEventListener("touchstart", () => { categoryTouchActive = true; }, {passive: true});
-document.addEventListener("touchend", () => { categoryTouchActive = false; }, {passive: true});
-document.addEventListener("touchcancel", () => { categoryTouchActive = false; }, {passive: true});
 function cancelCategoryTransition() {
   clearTimeout(categoryScrollTimer);
   document.documentElement.classList.remove("is-changing-menu-category");
@@ -1036,9 +1032,15 @@ function cancelCategoryTransition() {
   previousMenuScroll = window.scrollY;
 }
 // User interaction takes precedence over an in-progress automatic return.
-document.addEventListener("pointerdown", () => {
-  if (categoryTransitionUntil === Infinity) cancelCategoryTransition();
+document.addEventListener("pointerdown", event => {
+  if (categoryTransitionUntil === Infinity && event.target.closest('button, a, input, textarea, select, .menu-card')) cancelCategoryTransition();
 }, {passive: true});
+// During the short automatic return, do not let touch momentum fight the animation.
+function holdCategoryReturn(event) {
+  if (categoryTransitionUntil === Infinity && event.cancelable && !(event.touches?.length > 1)) event.preventDefault();
+}
+document.addEventListener("touchmove", holdCategoryReturn, {passive: false});
+document.addEventListener("wheel", holdCategoryReturn, {passive: false});
 document.addEventListener("keydown", event => {
   if (event.key === "Escape" || event.target.matches("input, textarea, select")) cancelCategoryTransition();
 });
@@ -1087,18 +1089,7 @@ window.addEventListener("scroll", () => {
   if (!next || !last || menuGrid.hidden) return;
   const bottom = last.getBoundingClientRect().bottom;
   if (bottom <= window.innerHeight - 20 && bottom > siteHeader.getBoundingClientRect().height) {
-    // Let finger movement and native momentum settle before returning upward.
-    categoryScrollTimer = setTimeout(function advanceAfterScroll() {
-      if (Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
-      if (categoryTouchActive) {
-        categoryScrollTimer = setTimeout(advanceAfterScroll, 180);
-        return;
-      }
-      const lastCard = menuGrid.lastElementChild;
-      if (!lastCard || menuGrid.hidden || nextMenuCategory() !== next) return;
-      const end = lastCard.getBoundingClientRect().bottom;
-      if (end <= window.innerHeight - 20 && end > siteHeader.getBoundingClientRect().height) goToMenuCategory(next);
-    }, 180);
+    goToMenuCategory(next);
   }
 }, {passive: true});
 

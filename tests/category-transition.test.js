@@ -20,7 +20,7 @@ test('first load starts with offers and refresh preserves manually selected all 
   assert.equal(context.state.category,'all');
 });
 const code = source.slice(source.indexOf('let categoryTransitionUntil ='), source.indexOf('window.addEventListener("scroll", () => {', source.indexOf('let categoryTransitionUntil =')));
-test('automatic return waits for touch release and scroll idle', () => {
+test('automatic return starts at section end and blocks competing scroll only during animation', () => {
   const listeners = {}, timers = new Map(), frames = [];
   let timerId = 0;
   const end = source.indexOf('function chooseCategory(', source.indexOf('let categoryTransitionUntil ='));
@@ -37,14 +37,16 @@ test('automatic return waits for touch release and scroll idle', () => {
     setTimeout(fn) {timers.set(++timerId,fn);return timerId;}, clearTimeout:id=>timers.delete(id)
   };
   vm.runInNewContext(fullCode,context);
-  listeners.touchstart();
+  let blocked = 0;
+  listeners.touchmove({cancelable:true,preventDefault(){blocked++;}});
+  assert.equal(blocked,0,'normal scrolling remains available');
   context.window.scrollY=1100; listeners.scroll();
-  assert.equal(frames.length,0);
-  const first=[...timers.values()][0];timers.clear();first();
-  assert.equal(frames.length,0,'no animation while finger is down');
-  listeners.touchend();
-  const pending=[...timers.values()][0];timers.clear();pending();
-  assert.equal(frames.length,1,'start only after finger release and idle');
+  assert.equal(frames.length,1,'start immediately at end without waiting for touch release');
+  listeners.touchmove({cancelable:true,preventDefault(){blocked++;}});
+  assert.equal(blocked,1,'touch scroll cannot fight the return');
+  vm.runInContext('cancelCategoryTransition();',context);
+  listeners.touchmove({cancelable:true,preventDefault(){blocked++;}});
+  assert.equal(blocked,1,'scrolling restored after cancellation');
 });
 test('scroll reaches the top before changing category and reduced motion still works', () => {
   for (const reduced of [false, true]) {
