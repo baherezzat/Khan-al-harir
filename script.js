@@ -897,8 +897,7 @@ function filteredItems() {
   const query = normalizeText(state.query);
   return menuItems.filter(item => {
     const inCategory = state.category === "all" || item.category === state.category;
-    if (!inCategory) return false;
-    if (!query) return true;
+    if (!query) return inCategory;
     const searchable = normalizeText(`${item.name} ${item.arabic} ${item.description} ${item.descriptionAr} ${arabicMenuDescriptions[item.category]} ${categoryLabels[item.category]} ${categoryLabelsAr[item.category]}`);
     return searchable.includes(query);
   });
@@ -993,7 +992,7 @@ function renderMenu() {
   menuGrid.hidden = matches.length === 0;
   clearSearch.hidden = state.query.length === 0;
 
-  const context = state.category === "all"
+  const context = state.query.trim() || state.category === "all"
     ? (currentLanguage === "ar" ? "طبقًا" : "dishes")
     : currentCategoryLabel(state.category).toLowerCase();
   menuCount.textContent = matches.length === 0
@@ -1009,7 +1008,8 @@ function renderMenu() {
       ? `انتهى القسم — تابع النزول إلى ${currentCategoryLabel(next)} ↓`
       : `End of section — keep scrolling to ${currentCategoryLabel(next)} ↓`;
   }
-  document.getElementById("currentCategoryTitle").textContent = state.category === "all"
+  document.getElementById("currentCategoryTitle").textContent = state.query.trim()
+    ? (currentLanguage === "ar" ? "نتائج البحث" : "Search results") : state.category === "all"
     ? (currentLanguage === "ar" ? "كل الأطباق" : "All dishes") : currentCategoryLabel(state.category);
   renderCategories();
 }
@@ -1046,6 +1046,13 @@ document.addEventListener("keydown", event => {
 document.addEventListener("click", event => {
   if (event.target.closest('a[href^="#"]')) cancelCategoryTransition();
 });
+function selectMenuCategory(category) {
+  cancelCategoryTransition();
+  state.query = "";
+  menuSearch.value = "";
+  chooseCategory(category);
+}
+
 function goToMenuCategory(category) {
   clearTimeout(categoryScrollTimer);
   const serial = ++categoryTransitionSerial;
@@ -1104,16 +1111,18 @@ function chooseCategory(category, shouldScroll = false) {
 
 categoryFilters.addEventListener("click", event => {
   const button = event.target.closest("button[data-category]");
-  if (button) goToMenuCategory(button.dataset.category);
+  if (button) selectMenuCategory(button.dataset.category);
 });
 
 menuSearch.addEventListener("input", () => {
+  cancelCategoryTransition();
   state.query = menuSearch.value;
   state.visible = PAGE_SIZE;
   renderMenu();
 });
 
 clearSearch.addEventListener("click", () => {
+  cancelCategoryTransition();
   state.query = "";
   menuSearch.value = "";
   state.visible = PAGE_SIZE;
