@@ -25,7 +25,7 @@ test('scroll reaches the top before changing category and reduced motion still w
     const queue = [], events = [];
     const context = {
       window: {scrollY: 2000, scrollTo({top}) {this.scrollY = top; events.push(['scroll', top]);}},
-      document: {querySelector: () => ({getBoundingClientRect: () => ({top: -1500})})},
+      document: {addEventListener() {}, querySelector: () => ({getBoundingClientRect: () => ({top: -1500})})},
       siteHeader: {getBoundingClientRect: () => ({height: 100})},
       categoryFilters: {querySelector: () => null}, prefersReducedMotion: {matches: reduced},
       performance: {now: () => 0}, requestAnimationFrame: fn => queue.push(fn),
@@ -41,5 +41,9 @@ test('scroll reaches the top before changing category and reduced motion still w
     const changed = events.findIndex(event => event[0] === 'category');
     assert.deepEqual(events[changed - 1], ['scroll', 388]);
     assert.deepEqual(events[changed], ['category', 'shawarma']);
+    events.length = 0;
+    vm.runInContext('goToMenuCategory("drinks");cancelCategoryTransition();', context);
+    queue.shift()(650);
+    assert.equal(events.length, 0, 'cancelled transition must not change scroll or category');
   }
 });

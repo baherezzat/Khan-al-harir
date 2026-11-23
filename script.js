@@ -576,7 +576,7 @@ function applyOfficialMenu(categories, items, { preserveView = false } = {}) {
   menuItems = items;
   lastMenuSignature = officialMenuSignature(items);
   menuLoadState = "loaded";
-  state.category = preserveView && !state.defaultCategoryPending && (previousCategory === "all" || menuCategories.some(category => category.id === previousCategory))
+  state.category = preserveView && !state.defaultCategoryPending && (previousCategory === "all" || (menuCategories.some(category => category.id === previousCategory) && items.some(item => item.category === previousCategory)))
     ? previousCategory
     : defaultMenuCategory(categories, items);
   state.defaultCategoryPending = false;
@@ -1010,7 +1010,7 @@ function renderMenu() {
       ? `تابع النزول إلى ${currentCategoryLabel(next)} ↓`
       : `Keep scrolling to ${currentCategoryLabel(next)} ↓`;
   }
-  document.getElementById("previewCategoryTitle").textContent = state.category === "all"
+  document.getElementById("currentCategoryTitle").textContent = state.category === "all"
     ? (currentLanguage === "ar" ? "كل الأطباق" : "All dishes") : currentCategoryLabel(state.category);
   renderCategories();
 }
@@ -1023,6 +1023,21 @@ function nextMenuCategory() {
 let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
 let categoryTransitionSerial = 0;
+function cancelCategoryTransition() {
+  categoryTransitionSerial += 1;
+  categoryTransitionUntil = Date.now() + 1000;
+  previousMenuScroll = window.scrollY;
+}
+// User interaction takes precedence over an in-progress automatic return.
+document.addEventListener("pointerdown", () => {
+  if (categoryTransitionUntil === Infinity) cancelCategoryTransition();
+}, {passive: true});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" || event.target.matches("input, textarea, select")) cancelCategoryTransition();
+});
+document.addEventListener("click", event => {
+  if (event.target.closest('a[href^="#"]')) cancelCategoryTransition();
+});
 function goToMenuCategory(category) {
   const serial = ++categoryTransitionSerial;
   categoryTransitionUntil = Infinity;
