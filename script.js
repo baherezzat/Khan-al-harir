@@ -981,7 +981,7 @@ function renderCategories() {
 
 function renderMenu() {
   const matches = filteredItems();
-  const visibleItems = matches.slice(0, state.visible);
+  const visibleItems = matches;
   menuGrid.innerHTML = visibleItems.map(menuCard).join("");
   emptyState.hidden = menuLoadState === "loading" || matches.length !== 0;
   menuGrid.hidden = matches.length === 0;
@@ -996,15 +996,47 @@ function renderMenu() {
       ? `نعرض ${visibleItems.length} من ${matches.length} — ${context}`
       : `Showing ${visibleItems.length} of ${matches.length} ${context}`;
 
-  showMore.hidden = matches.length === 0 || state.visible >= matches.length;
+  const next = nextMenuCategory();
+  showMore.hidden = !next || Boolean(state.query.trim()) || matches.length === 0;
   if (!showMore.hidden) {
-    const remaining = matches.length - state.visible;
     showMore.textContent = currentLanguage === "ar"
-      ? `عرض أطباق أخرى (${Math.min(PAGE_SIZE, remaining)} من ${remaining})`
-      : `Show more dishes (${Math.min(PAGE_SIZE, remaining)} of ${remaining})`;
+      ? `تابع النزول إلى ${currentCategoryLabel(next)} ↓`
+      : `Keep scrolling to ${currentCategoryLabel(next)} ↓`;
   }
+  document.getElementById("previewCategoryTitle").textContent = state.category === "all"
+    ? (currentLanguage === "ar" ? "كل الأطباق" : "All dishes") : currentCategoryLabel(state.category);
   renderCategories();
 }
+
+function nextMenuCategory() {
+  const sequence = ["all", ...menuCategories.filter(category => menuItems.some(item => item.category === category.id)).map(category => category.id)];
+  return sequence[sequence.indexOf(state.category) + 1] || null;
+}
+
+let categoryTransitionUntil = 0;
+let previousMenuScroll = window.scrollY;
+function goToMenuCategory(category) {
+  categoryTransitionUntil = Date.now() + 1000;
+  state.query = "";
+  menuSearch.value = "";
+  chooseCategory(category);
+  const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
+  window.scrollTo({top: Math.max(0, top), behavior: "instant"});
+  previousMenuScroll = window.scrollY;
+  const active = categoryFilters.querySelector('[aria-pressed="true"]');
+  if (active) categoryFilters.scrollLeft += active.getBoundingClientRect().left - categoryFilters.getBoundingClientRect().left;
+}
+
+window.addEventListener("scroll", () => {
+  const goingDown = window.scrollY > previousMenuScroll + 1;
+  previousMenuScroll = window.scrollY;
+  if (!goingDown || Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
+  const next = nextMenuCategory();
+  const last = menuGrid.lastElementChild;
+  if (!next || !last || menuGrid.hidden) return;
+  const bottom = last.getBoundingClientRect().bottom;
+  if (bottom <= window.innerHeight - 20 && bottom > siteHeader.getBoundingClientRect().height) goToMenuCategory(next);
+}, {passive: true});
 
 function chooseCategory(category, shouldScroll = false) {
   state.category = category === "all" || categoryLabels[category] ? category : "all";
@@ -1017,7 +1049,7 @@ function chooseCategory(category, shouldScroll = false) {
 
 categoryFilters.addEventListener("click", event => {
   const button = event.target.closest("button[data-category]");
-  if (button) chooseCategory(button.dataset.category);
+  if (button) goToMenuCategory(button.dataset.category);
 });
 
 menuSearch.addEventListener("input", () => {
@@ -1044,11 +1076,8 @@ resetFilters.addEventListener("click", () => {
 });
 
 showMore.addEventListener("click", () => {
-  const firstNewIndex = state.visible;
-  state.visible += PAGE_SIZE;
-  renderMenu();
-  const firstNewCard = menuGrid.children[firstNewIndex];
-  if (showMore.hidden && firstNewCard) firstNewCard.focus({ preventScroll: true });
+  const next = nextMenuCategory();
+  if (next) goToMenuCategory(next);
 });
 
 // Clicking any menu card opens a focused, bilingual dish detail dialog.
