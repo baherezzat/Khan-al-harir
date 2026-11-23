@@ -300,7 +300,6 @@ const staticTextAr = new Map(Object.entries({
   "Opening hours": "مواعيد العمل",
   "Every day: 9:00 AM – 4:00 AM": "يوميًا: من ٩:٠٠ صباحًا حتى ٤:٠٠ صباحًا",
   "Updated automatically from the official QR menu.": "تُحدّث تلقائيًا من منيو QR الرسمي.",
-  "Restaurant information and opening hours are sourced from Khan Al Harir’s official QR menu.": "بيانات المطعم ومواعيد العمل مأخوذة من منيو QR الرسمي لخان الحرير.",
   "Availability, prices, and opening hours update from the official QR menu.": "يتم تحديث التوفر والأسعار ومواعيد العمل من منيو QR الرسمي.",
   "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
   "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي.",
@@ -1295,7 +1294,7 @@ const CUSTOMER_STORAGE_KEY = "khan-customer-v1";
 for (const key of ["khan-cart-v1"]) {
   try { localStorage.removeItem(key); } catch (_) { /* storage may be unavailable */ }
 }
-const RESTAURANT_WHATSAPP = "201050714404";
+const RESTAURANT_WHATSAPP = "201155075861";
 const cartDialog = document.getElementById("cartDialog");
 const cartTrigger = document.getElementById("cartTrigger");
 const cartCount = document.getElementById("cartCount");

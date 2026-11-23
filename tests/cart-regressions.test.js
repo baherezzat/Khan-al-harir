@@ -126,7 +126,7 @@ test("handoff clears cart and order notes while retaining customer details and m
   let opened;
   const globals = {
     localStorage, sessionStorage, CUSTOMER_STORAGE_KEY: "customer", CART_STORAGE_KEY: "cart",
-    cart: [validLine], checkoutStep: 4, currentLanguage: "en", RESTAURANT_WHATSAPP: "201050714404",
+    cart: [validLine], checkoutStep: 4, currentLanguage: "en", RESTAURANT_WHATSAPP: source.match(/const RESTAURANT_WHATSAPP = "(\d+)"/)[1],
     checkoutNext: {}, confirmError: {}, cartFoot: {}, renderCart() {},
     customerData: () => ({name: "Customer", phone: "01012345678", orderNote: notes[0].value}),
     document: {getElementById: id => nodes[id], querySelectorAll: selector => selector === ".checkout-panel" ? [] : notes},
@@ -146,6 +146,7 @@ test("handoff clears cart and order notes while retaining customer details and m
   assert.ok(notes.every(note => note.value === ""));
   assert.equal(nodes.confirmAccuracy.checked, false);
   assert.equal(nodes.whatsappOrderLink.href, opened);
+  assert.equal(new URL(opened).pathname, "/201155075861");
   assert.ok(opened.includes(encodeURIComponent("2 chicken orders")));
   assert.equal(nodes.checkoutSuccess.hidden, false);
   assert.equal(nodes.pickupDateTime.value, "");
