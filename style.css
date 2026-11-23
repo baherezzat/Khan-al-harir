@@ -37,6 +37,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 20px); }
+html.is-changing-menu-category { scroll-behavior: auto !important; overflow-anchor: none; }
+html.is-changing-menu-category body { overflow-anchor: none; }
 body {
   margin: 0;
   min-width: 0;

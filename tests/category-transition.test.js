@@ -20,12 +20,39 @@ test('first load starts with offers and refresh preserves manually selected all 
   assert.equal(context.state.category,'all');
 });
 const code = source.slice(source.indexOf('let categoryTransitionUntil ='), source.indexOf('window.addEventListener("scroll", () => {', source.indexOf('let categoryTransitionUntil =')));
+test('automatic return waits for touch release and scroll idle', () => {
+  const listeners = {}, timers = new Map(), frames = [];
+  let timerId = 0;
+  const end = source.indexOf('function chooseCategory(', source.indexOf('let categoryTransitionUntil ='));
+  const fullCode = source.slice(source.indexOf('let categoryTransitionUntil ='), end);
+  const context = {
+    window: {scrollY: 1000, innerHeight:800, addEventListener(type, fn) {listeners[type]=fn;}},
+    document: {addEventListener(type, fn) {listeners[type]=fn;}, documentElement:{classList:{add(){},remove(){}}},
+      querySelector: selector => selector === 'dialog[open]' ? null : {getBoundingClientRect:()=>({top:-500})}},
+    siteHeader:{getBoundingClientRect:()=>({height:100})},
+    menuGrid:{hidden:false,lastElementChild:{getBoundingClientRect:()=>({bottom:600})}},
+    state:{query:''}, nextMenuCategory:()=> 'shawarma',
+    performance:{now:()=>0}, prefersReducedMotion:{matches:false},
+    requestAnimationFrame:fn=>frames.push(fn),
+    setTimeout(fn) {timers.set(++timerId,fn);return timerId;}, clearTimeout:id=>timers.delete(id)
+  };
+  vm.runInNewContext(fullCode,context);
+  listeners.touchstart();
+  context.window.scrollY=1100; listeners.scroll();
+  assert.equal(frames.length,0);
+  const first=[...timers.values()][0];timers.clear();first();
+  assert.equal(frames.length,0,'no animation while finger is down');
+  listeners.touchend();
+  const pending=[...timers.values()][0];timers.clear();pending();
+  assert.equal(frames.length,1,'start only after finger release and idle');
+});
 test('scroll reaches the top before changing category and reduced motion still works', () => {
   for (const reduced of [false, true]) {
     const queue = [], events = [];
     const context = {
       window: {scrollY: 2000, scrollTo({top}) {this.scrollY = top; events.push(['scroll', top]);}},
-      document: {addEventListener() {}, querySelector: () => ({getBoundingClientRect: () => ({top: -1500})})},
+      document: {documentElement: {classList: {add() {}, remove() {}}}, addEventListener() {}, querySelector: () => ({getBoundingClientRect: () => ({top: -1500})})},
+      clearTimeout() {},
       siteHeader: {getBoundingClientRect: () => ({height: 100})},
       categoryFilters: {querySelector: () => null}, prefersReducedMotion: {matches: reduced},
       performance: {now: () => 0}, requestAnimationFrame: fn => queue.push(fn),
@@ -36,7 +63,7 @@ test('scroll reaches the top before changing category and reduced motion still w
     queue.shift()(100);
     if (!reduced) {
       assert.equal(events.some(event => event[0] === 'category'), false);
-      queue.shift()(650);
+      queue.shift()(1800);
     }
     const changed = events.findIndex(event => event[0] === 'category');
     assert.deepEqual(events[changed - 1], ['scroll', 388]);

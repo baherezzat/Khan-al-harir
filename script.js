@@ -1023,7 +1023,14 @@ function nextMenuCategory() {
 let categoryTransitionUntil = 0;
 let previousMenuScroll = window.scrollY;
 let categoryTransitionSerial = 0;
+let categoryScrollTimer;
+let categoryTouchActive = false;
+document.addEventListener("touchstart", () => { categoryTouchActive = true; }, {passive: true});
+document.addEventListener("touchend", () => { categoryTouchActive = false; }, {passive: true});
+document.addEventListener("touchcancel", () => { categoryTouchActive = false; }, {passive: true});
 function cancelCategoryTransition() {
+  clearTimeout(categoryScrollTimer);
+  document.documentElement.classList.remove("is-changing-menu-category");
   categoryTransitionSerial += 1;
   categoryTransitionUntil = Date.now() + 1000;
   previousMenuScroll = window.scrollY;
@@ -1039,18 +1046,21 @@ document.addEventListener("click", event => {
   if (event.target.closest('a[href^="#"]')) cancelCategoryTransition();
 });
 function goToMenuCategory(category) {
+  clearTimeout(categoryScrollTimer);
   const serial = ++categoryTransitionSerial;
   categoryTransitionUntil = Infinity;
+  document.documentElement.classList.add("is-changing-menu-category");
   const startY = window.scrollY;
   const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
   const targetY = Math.max(0, top);
-  const duration = prefersReducedMotion.matches ? 0 : 650;
+  const duration = prefersReducedMotion.matches ? 0 : Math.min(1800, Math.max(1100, Math.abs(startY - targetY) * .45));
   const started = performance.now();
   function finish() {
     state.query = "";
     menuSearch.value = "";
     chooseCategory(category);
     window.scrollTo({top: targetY, behavior: "instant"});
+    document.documentElement.classList.remove("is-changing-menu-category");
     previousMenuScroll = window.scrollY;
     categoryTransitionUntil = Date.now() + 600;
     const active = categoryFilters.querySelector('[aria-pressed="true"]');
@@ -1059,7 +1069,7 @@ function goToMenuCategory(category) {
   function frame(now) {
     if (serial !== categoryTransitionSerial) return;
     const progress = duration ? Math.min(1, (now - started) / duration) : 1;
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = progress < .5 ? 4 * progress ** 3 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
     window.scrollTo({top: startY + (targetY - startY) * eased, behavior: "instant"});
     if (progress < 1) requestAnimationFrame(frame);
     else finish();
@@ -1068,6 +1078,7 @@ function goToMenuCategory(category) {
 }
 
 window.addEventListener("scroll", () => {
+  clearTimeout(categoryScrollTimer);
   const goingDown = window.scrollY > previousMenuScroll + 1;
   previousMenuScroll = window.scrollY;
   if (!goingDown || Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
@@ -1075,7 +1086,20 @@ window.addEventListener("scroll", () => {
   const last = menuGrid.lastElementChild;
   if (!next || !last || menuGrid.hidden) return;
   const bottom = last.getBoundingClientRect().bottom;
-  if (bottom <= window.innerHeight - 20 && bottom > siteHeader.getBoundingClientRect().height) goToMenuCategory(next);
+  if (bottom <= window.innerHeight - 20 && bottom > siteHeader.getBoundingClientRect().height) {
+    // Let finger movement and native momentum settle before returning upward.
+    categoryScrollTimer = setTimeout(function advanceAfterScroll() {
+      if (Date.now() < categoryTransitionUntil || state.query.trim() || document.querySelector("dialog[open]")) return;
+      if (categoryTouchActive) {
+        categoryScrollTimer = setTimeout(advanceAfterScroll, 180);
+        return;
+      }
+      const lastCard = menuGrid.lastElementChild;
+      if (!lastCard || menuGrid.hidden || nextMenuCategory() !== next) return;
+      const end = lastCard.getBoundingClientRect().bottom;
+      if (end <= window.innerHeight - 20 && end > siteHeader.getBoundingClientRect().height) goToMenuCategory(next);
+    }, 180);
+  }
 }, {passive: true});
 
 function chooseCategory(category, shouldScroll = false) {
