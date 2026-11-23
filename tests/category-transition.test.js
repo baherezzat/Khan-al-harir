@@ -66,6 +66,8 @@ test('scroll reaches the top before changing category and reduced motion still w
     if (!reduced) {
       assert.equal(events.some(event => event[0] === 'category'), false);
       queue.shift()(1800);
+      assert.equal(events.some(event => event[0] === 'category'), false, 'slower return must still be running at 1.8 seconds');
+      queue.shift()(3800);
     }
     const changed = events.findIndex(event => event[0] === 'category');
     assert.deepEqual(events[changed - 1], ['scroll', 388]);
