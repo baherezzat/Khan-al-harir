@@ -1061,7 +1061,7 @@ function goToMenuCategory(category) {
   const startY = window.scrollY;
   const top = document.querySelector(".category-wrap").getBoundingClientRect().top + window.scrollY - siteHeader.getBoundingClientRect().height - 12;
   const targetY = Math.max(0, top);
-  const duration = prefersReducedMotion.matches ? 0 : Math.min(10000, Math.max(8000, Math.abs(startY - targetY) * 2));
+  const duration = prefersReducedMotion.matches ? 0 : Math.min(7500, Math.max(6000, Math.abs(startY - targetY) * 1.5));
   const started = performance.now();
   function finish() {
     state.query = "";
