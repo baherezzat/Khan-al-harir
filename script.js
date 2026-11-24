@@ -300,7 +300,6 @@ const staticTextAr = new Map(Object.entries({
   "Opening hours": "مواعيد العمل",
   "Every day: 9:00 AM – 4:00 AM": "يوميًا: من ٩:٠٠ صباحًا حتى ٤:٠٠ صباحًا",
   "Updated automatically from the official QR menu.": "تُحدّث تلقائيًا من منيو QR الرسمي.",
-  "Availability, prices, and opening hours update from the official QR menu.": "يتم تحديث التوفر والأسعار ومواعيد العمل من منيو QR الرسمي.",
   "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
   "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي.",
   "Follow Khan Al Harir": "تابع خان الحرير",
