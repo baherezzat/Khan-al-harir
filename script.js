@@ -299,7 +299,6 @@ const staticTextAr = new Map(Object.entries({
   "Branch phone": "هاتف الفرع",
   "Opening hours": "مواعيد العمل",
   "Every day: 9:00 AM – 4:00 AM": "يوميًا: من ٩:٠٠ صباحًا حتى ٤:٠٠ صباحًا",
-  "Updated automatically from the official QR menu.": "تُحدّث تلقائيًا من منيو QR الرسمي.",
   "Khan Al Harir. Menu items, categories, and EGP prices load only from the official QR menu.": "خان الحرير. تُحمّل أصناف المنيو والأقسام والأسعار بالجنيه المصري فقط من منيو QR الرسمي.",
   "Availability and prices may change when the official QR menu is updated.": "قد يتغير التوفر والأسعار عند تحديث منيو QR الرسمي.",
   "Follow Khan Al Harir": "تابع خان الحرير",
@@ -650,8 +649,7 @@ function formatOfficialTime(value) {
 
 function renderOfficialHours() {
   const summary = document.getElementById("openingHoursSummary");
-  const source = document.getElementById("openingHoursSource");
-  if (!summary || !source || !officialBranchInfo) return;
+  if (!summary || !officialBranchInfo) return;
   const hours = officialBranchInfo.working_hours || officialBranchInfo.workingHours || [];
   if (!hours.length) return;
 
@@ -677,9 +675,6 @@ function renderOfficialHours() {
       return `<span class="hours-row"><b>${escapeHTML(day)}</b><span>${escapeHTML(formatRange(entry))}</span></span>`;
     }).join("");
   }
-  source.textContent = currentLanguage === "ar"
-    ? "تُحدّث تلقائيًا من منيو QR الرسمي."
-    : "Updated automatically from the official QR menu.";
 }
 
 function applyOfficialBranchInfo(branch) {
