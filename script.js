@@ -772,9 +772,9 @@ function preferredLanguage() {
     const saved = localStorage.getItem("khan-language");
     if (saved === "ar" || saved === "en") return saved;
   } catch (_) {
-    // Storage can be unavailable in privacy modes; browser language remains a safe fallback.
+    // Storage can be unavailable in privacy modes; Arabic remains the default.
   }
-  return navigator.language.toLowerCase().startsWith("ar") ? "ar" : "en";
+  return "ar";
 }
 
 let currentLanguage = preferredLanguage();
