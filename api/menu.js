@@ -1,4 +1,6 @@
-"use strict";
+import seed from "../data/menu-backup.json" with { type: "json" };
+import {createMenuService} from "../lib/menu-service.js";
+import {redisMenuStore} from "../lib/menu-store.js";
 
 const API_BASE = "https://dashboard.iconapp.site/api";
 const BRANCH_ID = 33;
@@ -28,17 +30,8 @@ async function fetchJSON(url, deadline) {
   throw lastError || new Error("Official menu request failed");
 }
 
-// Share only in-flight work within this server instance; completed requests still refresh normally.
-let menuFetchInFlight = null;
-function sharedMenuFetch() {
-  if (!menuFetchInFlight) {
-    menuFetchInFlight = fetchMenuBundle().finally(() => { menuFetchInFlight = null; });
-  }
-  return menuFetchInFlight;
-}
-
-async function fetchMenuBundle() {
-  const deadline = Date.now() + 50000;
+export async function fetchMenuBundle() {
+  const deadline = Date.now() + 12000;
   const [categories, branch] = await Promise.all([
     fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`, deadline),
     fetchJSON(`${API_BASE}/branches/khan-al-harir`, deadline).catch(() => null)
@@ -66,6 +59,8 @@ async function fetchMenuBundle() {
   return { categories: completeCategories, failedCategoryCount, branch, fetchedAt: new Date().toISOString() };
 }
 
+const service = createMenuService({fetchSource:fetchMenuBundle, seed, store:redisMenuStore()});
+
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
@@ -73,11 +68,12 @@ export default async function handler(request, response) {
   }
 
   try {
-    const data = await sharedMenuFetch();
-    const { failedCategoryCount } = data;
+    const data = await service.get();
 
-    // Never cache partial results or serve an old response while revalidating.
-    response.setHeader("Cache-Control", failedCategoryCount ? "no-store" : "public, max-age=0, s-maxage=60, must-revalidate");
+
+    // Only complete snapshots are served; short edge caching absorbs customer traffic.
+    response.setHeader("Cache-Control", data.stale ? "public, max-age=0, s-maxage=15, must-revalidate" : "public, max-age=0, s-maxage=60, must-revalidate");
+    response.setHeader("X-Menu-Source", data.stale ? "saved" : "current");
     return response.status(200).json({ status: true, data });
   } catch (error) {
     console.error("Official menu proxy failed", error);

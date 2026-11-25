@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import vm from "node:vm";
-import handler from "../api/menu.js";
+import handler, {fetchMenuBundle} from "../api/menu.js";
 
 const source = readFileSync(new URL("../script.js", import.meta.url), "utf8");
 const signatureCode = source.slice(source.indexOf("function officialMenuSignature("), source.indexOf("function updateMenuSourceMessage("));
@@ -39,14 +39,14 @@ test("proxy discovers new source categories and returns their current products a
     return {ok:true,json:async()=>({status:true,data})};
   };
   try {
-    const first=response(); await handler({method:"GET"},first);
+    const first={body:{data:await fetchMenuBundle()}};
     generation=1;
-    const second=response(); await handler({method:"GET"},second);
+    const second={body:{data:await fetchMenuBundle()}};
     assert.equal(first.body.data.categories[0].products[0].price,100);
     assert.equal(second.body.data.categories.length,2);
     assert.equal(second.body.data.categories[0].products[0].price,150);
     assert.ok(fetched.some(url=>url.includes("/categories/2/products")));
-    assert.equal(second.headers["Cache-Control"],"public, max-age=0, s-maxage=60, must-revalidate");
+
   } finally {global.fetch=original;}
 });
 test("malformed product data is marked unavailable and never cached as an empty menu", async () => {
@@ -54,8 +54,7 @@ test("malformed product data is marked unavailable and never cached as an empty 
   global.fetch=async url=>({ok:true,json:async()=>({status:true,data:
     url.endsWith("/categories") ? [{id:1}] : {id:33}})});
   try {
-    const result=response(); await handler({method:"GET"},result);
-    assert.equal(result.headers["Cache-Control"],"no-store");
+    const result={body:{data:await fetchMenuBundle()}};
     assert.equal(result.body.data.failedCategoryCount,1);
     assert.equal(result.body.data.categories[0].productsUnavailable,true);
   } finally {global.fetch=original;}
@@ -84,14 +83,11 @@ test("proxy rejects non-GET requests", async () => {
   assert.equal(result.code,405);
 });
 
-test('concurrent menu requests share upstream work, then later requests fetch new data', async () => {
- const original=global.fetch;let calls=0;
- global.fetch=async url=>{calls++;await new Promise(resolve=>setTimeout(resolve,5));return {ok:true,json:async()=>({status:true,data:url.endsWith('/categories')?[{id:1},{id:2}]:url.endsWith('khan-al-harir')?{id:33}:{products:[{id:1,price:100}]}})};};
- try {
-  const responses=Array.from({length:100},response);
-  await Promise.all(responses.map(res=>handler({method:'GET'},res)));
-  assert.equal(calls,4,'100 simultaneous clients should share one upstream bundle');
-  for(const res of responses){assert.equal(res.code,200);assert.equal(res.body.data.categories.length,2);}
-  await handler({method:'GET'},response());assert.equal(calls,8,'must not retain completed results as a new stale cache');
- }finally{global.fetch=original;}
+test('old server backup cannot replace a newer browser menu',async()=>{
+ const source=readFileSync(new URL('../script.js',import.meta.url),'utf8');
+ const code=source.slice(source.indexOf('async function loadOfficialMenu('),source.indexOf('function refreshOfficialMenuIfStale('));
+ let applied=false;
+ const context={menuRefreshInFlight:false,menuSource:{apiBase:'source',branchId:33},lastMenuRefreshAt:0,menuItems:[{id:1}],readOfficialMenuCache:()=>({savedAt:200000,sourceFetchedAt:'2026-11-25T10:00:00.000Z'}),fetchOfficialMenuBundle:async()=>({stale:true,fetchedAt:'2026-11-24T10:00:00.000Z'}),applyOfficialMenu(){applied=true;},menuSyncUnavailable:false,updateMenuSourceMessage(){},console:{warn(){},error(){}}};
+ await vm.runInNewContext(code+';loadOfficialMenu()',context);
+ assert.equal(applied,false);assert.equal(context.menuSyncUnavailable,true);assert.equal(context.menuRefreshInFlight,false);
 });

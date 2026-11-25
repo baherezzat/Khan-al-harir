@@ -545,10 +545,11 @@ function readOfficialMenuCache() {
   }
 }
 
-function writeOfficialMenuCache(categories, items, branch) {
+function writeOfficialMenuCache(categories, items, branch, sourceFetchedAt) {
   try {
     localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({
       savedAt: Date.now(),
+      sourceFetchedAt: sourceFetchedAt || new Date().toISOString(),
       categories: categories.map(({ id, label, ar, sourceId }) => ({ id, label, ar, sourceId })),
       items,
       branch: branch || null
@@ -705,6 +706,11 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
   }
   try {
     const bundle = await fetchOfficialMenuBundle(apiBase, branchId);
+    if (bundle.stale && menuItems.length && (!cachedMenu || (Date.parse(cachedMenu.sourceFetchedAt || "") || cachedMenu.savedAt || 0) > Date.parse(bundle.fetchedAt))) {
+      menuSyncUnavailable = true;
+      updateMenuSourceMessage();
+      return;
+    }
     const categories = bundle.categories;
     applyOfficialBranchInfo(bundle.branch);
     const nextCategories = categories.map(category => ({
@@ -741,8 +747,8 @@ async function loadOfficialMenu({ preserveView = false } = {}) {
     const nextSignature = officialMenuSignature(loadedItems, nextCategories);
     const menuChanged = nextSignature !== lastMenuSignature;
     applyOfficialMenu(nextCategories, loadedItems, { preserveView });
-    menuSyncUnavailable = false;
-    if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems, officialBranchInfo);
+    menuSyncUnavailable = Boolean(bundle.stale);
+    if (!failedCategoryCount) writeOfficialMenuCache(nextCategories, loadedItems, officialBranchInfo, bundle.fetchedAt);
     updateMenuSourceMessage();
     if (menuChanged || !preserveView) renderMenu();
   } catch (error) {
