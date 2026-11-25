@@ -1,7 +1,7 @@
 import sharp from "sharp";
+import {imageArchive} from "../lib/blob-images.js";
 
 const ALLOWED_IMAGE_HOSTS = new Set(["dashboard.iconapp.site"]);
-const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
@@ -17,23 +17,9 @@ export default async function handler(request, response) {
       return;
     }
 
-    const upstream = await fetch(source, {
-      redirect: "error",
-      signal: AbortSignal.timeout(10000),
-      headers: { Accept: "image/webp,image/jpeg,image/png" }
-    });
-    if (!upstream.ok) throw new Error(`Image source failed (${upstream.status})`);
-    const declaredLength = Number(upstream.headers.get("content-length"));
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_SOURCE_BYTES) {
-      response.status(413).json({ error: "Image is too large" });
-      return;
-    }
-
-    const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
-    if (sourceBuffer.length > MAX_SOURCE_BYTES) {
-      response.status(413).json({ error: "Image is too large" });
-      return;
-    }
+    const original = await imageArchive.load(source.href);
+    const sourceBuffer = original.bytes;
+    response.setHeader("X-Image-Source", original.origin);
 
     const jpeg = await sharp(sourceBuffer)
       .rotate()

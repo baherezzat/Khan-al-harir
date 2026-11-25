@@ -1,7 +1,7 @@
 import sharp from "sharp";
+import {imageArchive} from "../lib/blob-images.js";
 
 const ALLOWED_IMAGE_HOSTS = new Set(["dashboard.iconapp.site"]);
-const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
 const OUTPUT_WIDTH = 1000;
 const OUTPUT_HEIGHT = 750;
 
@@ -20,23 +20,13 @@ export default async function handler(request, response) {
       return;
     }
 
-    const upstream = await fetch(source, {
-      redirect: "error",
-      signal: AbortSignal.timeout(12000),
-      headers: { Accept: "image/webp,image/jpeg,image/png" }
-    });
-    if (!upstream.ok) throw new Error(`Image source failed (${upstream.status})`);
-
-    const declaredLength = Number(upstream.headers.get("content-length"));
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_SOURCE_BYTES) {
-      response.status(413).json({ error: "Image is too large" });
-      return;
-    }
-
-    const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
-    if (sourceBuffer.length > MAX_SOURCE_BYTES) {
-      response.status(413).json({ error: "Image is too large" });
-      return;
+    const original = await imageArchive.load(source.href);
+    const sourceBuffer = original.bytes;
+    response.setHeader("X-Image-Source", original.origin);
+    if (request.query?.mode === "original") {
+      response.setHeader("Content-Type", original.contentType);
+      response.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400");
+      return response.status(200).send(sourceBuffer);
     }
 
     const image = await sharp(sourceBuffer)

@@ -1,3 +1,4 @@
+import {archiveMenuImages} from "../lib/blob-images.js";
 import seed from "../data/menu-backup.json" with { type: "json" };
 import {createMenuService} from "../lib/menu-service.js";
 import {redisMenuStore} from "../lib/menu-store.js";
@@ -69,6 +70,10 @@ export default async function handler(request, response) {
 
   try {
     const data = await service.get();
+    if(process.env.BLOB_READ_WRITE_TOKEN) {
+      const {waitUntil} = await import("@vercel/functions");
+      waitUntil(archiveMenuImages(data).catch(()=>{}));
+    }
 
 
     // Only complete snapshots are served; short edge caching absorbs customer traffic.

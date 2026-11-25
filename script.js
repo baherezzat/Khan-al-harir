@@ -456,7 +456,7 @@ function enhancedMenuImage(source, mode = "cover") {
   try {
     const url = new URL(source, window.location.href);
     if (url.protocol === "https:" && url.hostname === "dashboard.iconapp.site") {
-      return `/api/menu-image?v=3&mode=${mode}&src=${encodeURIComponent(url.href)}`;
+      return `/api/menu-image?v=4&mode=${mode}&src=${encodeURIComponent(url.href)}`;
     }
   } catch {}
   return source;
@@ -1167,7 +1167,7 @@ function customizationOptionMarkup(item, group, groupIndex, value, valueIndex) {
     ? `${group.overridePrice ? "" : "+"}${formatCurrency(value.price)}`
     : (isArabic ? "بدون زيادة" : "No extra charge");
   const image = value.image
-    ? `<img src="${escapeHTML(value.image)}" alt="" width="48" height="48" loading="lazy">`
+    ? `<img src="${escapeHTML(enhancedMenuImage(value.image, "original"))}" alt="" width="48" height="48" loading="lazy">`
     : "";
   return `<label class="customization-option">
     <input type="${inputType}" name="${escapeHTML(inputName)}" value="${escapeHTML(value.id)}"
