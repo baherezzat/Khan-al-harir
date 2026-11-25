@@ -17,7 +17,7 @@ Incomplete or empty source results never replace a complete backup. Source refre
 3. Redeploy, request /api/menu, and verify persistence=durable after a complete source refresh. Confirm the snapshot key khan:menu:33:last-complete:v1 exists.
 4. Verify a cold instance can read it with the source deliberately unavailable in a staging environment. Do not disrupt the production restaurant menu for this test.
 
-Redis has NOT been confirmed connected during this implementation. Until then, warm instances preserve the latest observed menu, but cold instances fall back to the bundled snapshot. Do not claim globally durable latest-menu protection is active before step 3 is verified.
+Production Redis connection verified on 2026-11-25: /api/menu-health read a complete snapshot from actual Redis (fetchedAt 2026-11-25T18:22:19.124Z, 32 categories, 301 products). Its isolated source-outage simulation recovered that snapshot successfully without disabling the real upstream. The health route is read-only and cached for 30 seconds; it does not expose connection credentials.
 
 ## Verification and limits
 Run node --test tests/*.test.js. Tests cover cold starts, total/partial source failure, recovery, storage failure, shared 100-client refresh, distributed refresh lock, and snapshot persistence across new service instances using a mock durable store. This is not a measured maximum production customer capacity.

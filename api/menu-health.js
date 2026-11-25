@@ -1,4 +1,3 @@
-import seed from '../data/menu-backup.json' with {type:'json'};
 import {redisMenuStore} from '../lib/menu-store.js';
 import {createMenuService, completeMenu} from '../lib/menu-service.js';
 
