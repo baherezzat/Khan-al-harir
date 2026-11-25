@@ -83,3 +83,15 @@ test("proxy rejects non-GET requests", async () => {
   const result=response(); await handler({method:"POST"},result);
   assert.equal(result.code,405);
 });
+
+test('concurrent menu requests share upstream work, then later requests fetch new data', async () => {
+ const original=global.fetch;let calls=0;
+ global.fetch=async url=>{calls++;await new Promise(resolve=>setTimeout(resolve,5));return {ok:true,json:async()=>({status:true,data:url.endsWith('/categories')?[{id:1},{id:2}]:url.endsWith('khan-al-harir')?{id:33}:{products:[{id:1,price:100}]}})};};
+ try {
+  const responses=Array.from({length:100},response);
+  await Promise.all(responses.map(res=>handler({method:'GET'},res)));
+  assert.equal(calls,4,'100 simultaneous clients should share one upstream bundle');
+  for(const res of responses){assert.equal(res.code,200);assert.equal(res.body.data.categories.length,2);}
+  await handler({method:'GET'},response());assert.equal(calls,8,'must not retain completed results as a new stale cache');
+ }finally{global.fetch=original;}
+});

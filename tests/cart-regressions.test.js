@@ -166,3 +166,21 @@ test("pickup uses Cairo time and rejects missing or past custom times", () => {
   assert.ok(run(code + "; pickupTimeLabel()",globals).includes("2099-01-01 12:00"));
   assert.equal(run(code + "; pickupScheduleInvalid()",{...globals,selectedFulfilment:()=>"delivery"}),false);
 });
+
+test('orders created at the exact same time have distinct identifiers', async () => {
+ const {webcrypto}=await import('node:crypto');
+ const code=functionSource('createOrderNumber','buildWhatsAppMessage');
+ const result=run(code+';Array.from({length:10000},createOrderNumber)',{crypto:webcrypto,Date:{now:()=>123456789}});
+ assert.equal(new Set(result).size,10000);
+});
+
+test('checkout follows changed official hours, previous-day overnight hours and closing boundary', () => {
+ const code=functionSource('isRestaurantOpenNow','renderOrderReview');
+ const hours=[{day:'tuesday',from:'20:00:00',to:'02:00:00'},{day:'wednesday',from:'12:00:00',to:'22:00:00'}];
+ const check=(date,expected)=>assert.equal(run(code+';isRestaurantOpenNow(new Date(date))',{date,officialBranchInfo:{working_hours:hours}}),expected,date);
+ check('2026-11-24T23:00:00Z',true); // Wed 01:00 Cairo, Tuesday service
+ check('2026-11-25T00:00:00Z',false); // 02:00 closing boundary
+ check('2026-11-25T08:00:00Z',false); // 10:00 before changed opening
+ check('2026-11-25T10:00:00Z',true); // 12:00 opening
+ check('2026-11-25T20:00:00Z',false); // 22:00 closing
+});

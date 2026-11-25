@@ -28,6 +28,44 @@ async function fetchJSON(url, deadline) {
   throw lastError || new Error("Official menu request failed");
 }
 
+// Share only in-flight work within this server instance; completed requests still refresh normally.
+let menuFetchInFlight = null;
+function sharedMenuFetch() {
+  if (!menuFetchInFlight) {
+    menuFetchInFlight = fetchMenuBundle().finally(() => { menuFetchInFlight = null; });
+  }
+  return menuFetchInFlight;
+}
+
+async function fetchMenuBundle() {
+  const deadline = Date.now() + 50000;
+  const [categories, branch] = await Promise.all([
+    fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`, deadline),
+    fetchJSON(`${API_BASE}/branches/khan-al-harir`, deadline).catch(() => null)
+  ]);
+  if (!Array.isArray(categories)) throw new Error("Invalid categories response");
+  const completeCategories = [];
+  let failedCategoryCount = 0;
+
+  for (let offset = 0; offset < categories.length; offset += 6) {
+    const batch = categories.slice(offset, offset + 6);
+    const results = await Promise.allSettled(batch.map(async category => {
+      const data = await fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories/${category.id}/products`, deadline);
+      if (!Array.isArray(data?.products)) throw new Error("Invalid products response");
+      return { ...category, products: data.products };
+    }));
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") completeCategories.push(result.value);
+      else {
+        failedCategoryCount += 1;
+        completeCategories.push({ ...batch[index], products: [], productsUnavailable: true });
+      }
+    });
+  }
+
+  return { categories: completeCategories, failedCategoryCount, branch, fetchedAt: new Date().toISOString() };
+}
+
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
@@ -35,34 +73,12 @@ export default async function handler(request, response) {
   }
 
   try {
-    const deadline = Date.now() + 50000;
-    const [categories, branch] = await Promise.all([
-      fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories`, deadline),
-      fetchJSON(`${API_BASE}/branches/khan-al-harir`, deadline).catch(() => null)
-    ]);
-    if (!Array.isArray(categories)) throw new Error("Invalid categories response");
-    const completeCategories = [];
-    let failedCategoryCount = 0;
-
-    for (let offset = 0; offset < categories.length; offset += 6) {
-      const batch = categories.slice(offset, offset + 6);
-      const results = await Promise.allSettled(batch.map(async category => {
-        const data = await fetchJSON(`${API_BASE}/branches/${BRANCH_ID}/categories/${category.id}/products`, deadline);
-        if (!Array.isArray(data?.products)) throw new Error("Invalid products response");
-        return { ...category, products: data.products };
-      }));
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") completeCategories.push(result.value);
-        else {
-          failedCategoryCount += 1;
-          completeCategories.push({ ...batch[index], products: [], productsUnavailable: true });
-        }
-      });
-    }
+    const data = await sharedMenuFetch();
+    const { failedCategoryCount } = data;
 
     // Never cache partial results or serve an old response while revalidating.
     response.setHeader("Cache-Control", failedCategoryCount ? "no-store" : "public, max-age=0, s-maxage=60, must-revalidate");
-    return response.status(200).json({ status: true, data: { categories: completeCategories, failedCategoryCount, branch, fetchedAt: new Date().toISOString() } });
+    return response.status(200).json({ status: true, data });
   } catch (error) {
     console.error("Official menu proxy failed", error);
     response.setHeader("Cache-Control", "no-store");

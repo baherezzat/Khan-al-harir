@@ -1523,12 +1523,28 @@ function updatePickupSchedule() {
   document.getElementById("pickupDateTime").min = cairoLocalMinute();
 }
 
-function isRestaurantOpenNow() {
-  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
-  const hour = Number(parts.find(part => part.type === "hour")?.value || 0);
-  const minute = Number(parts.find(part => part.type === "minute")?.value || 0);
-  const time = hour * 60 + minute;
-  return time >= 9 * 60 || time <= 4 * 60;
+function isRestaurantOpenNow(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", weekday: "long", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const time = Number(parts.find(part => part.type === "hour").value) * 60 + Number(parts.find(part => part.type === "minute").value);
+  const day = parts.find(part => part.type === "weekday").value.toLowerCase();
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const previousDay = days[(days.indexOf(day) + 6) % 7];
+  const hours = officialBranchInfo?.working_hours || officialBranchInfo?.workingHours;
+  // Retain the last verified daily schedule until live branch information arrives.
+  if (!Array.isArray(hours) || !hours.length) return time >= 9 * 60 || time < 4 * 60;
+  return hours.some(entry => {
+    const entryDay = String(entry.day).toLowerCase();
+    if (entryDay !== day && entryDay !== previousDay) return false;
+    if (Number(entry.is_open_24_hours) === 1) return entryDay === day;
+    const parse = value => {
+      const match = /^(\d{2}):(\d{2})/.exec(String(value || ""));
+      return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
+    };
+    const from = parse(entry.from), to = parse(entry.to);
+    if (!Number.isFinite(from) || !Number.isFinite(to)) return false;
+    if (from > to) return entryDay === day ? time >= from : time < to;
+    return entryDay === day && time >= from && time < to;
+  });
 }
 
 function renderOrderReview() {
@@ -1549,7 +1565,7 @@ function renderOrderReview() {
 }
 
 function createOrderNumber() {
-  return `KH-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+  return `KH-${crypto.randomUUID().toUpperCase()}`;
 }
 
 function buildWhatsAppMessage(orderNumber) {
@@ -1579,7 +1595,7 @@ function confirmOrder() {
     return;
   }
   if (!isRestaurantOpenNow()) {
-    confirmError.textContent = currentLanguage === "ar" ? "المطعم مغلق الآن. مواعيد استقبال الطلبات يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "The restaurant is currently closed. Orders are accepted daily from 9:00 AM to 4:00 AM.";
+    confirmError.textContent = currentLanguage === "ar" ? "المطعم مغلق الآن. راجع مواعيد العمل المعروضة في الموقع." : "The restaurant is currently closed. Please check the opening hours shown on the website.";
     confirmError.hidden = false;
     return;
   }
@@ -1688,7 +1704,7 @@ function updateCartLanguage() {
   ].forEach((label, index) => { if (pickupOptions[index]) pickupOptions[index].textContent = label; });
   document.getElementById("pickupScheduleLabel").textContent = ar ? "تاريخ ووقت الاستلام (بتوقيت القاهرة)" : "Pickup date and time (Cairo time)";
   document.getElementById("pickupScheduleNote").textContent = ar ? "الموعد الذي تختاره يخضع لتأكيد المطعم." : "Requested time is subject to restaurant confirmation.";
-  document.getElementById("hoursNotice").textContent = ar ? "تُستقبل الطلبات خلال مواعيد العمل: يوميًا من ٩ صباحًا حتى ٤ صباحًا." : "Orders are accepted during restaurant hours: daily 9:00 AM–4:00 AM.";
+  document.getElementById("hoursNotice").textContent = ar ? "تُستقبل الطلبات خلال مواعيد عمل المطعم المعروضة في الموقع." : "Orders are accepted during the restaurant opening hours shown on the website.";
   document.querySelector(".payment-choice legend").textContent = ar ? "طريقة الدفع" : "Payment method";
   const paymentLabels = document.querySelectorAll(".payment-choice label");
   paymentLabels[0].querySelector("b").textContent = ar ? "نقدًا" : "Cash";
