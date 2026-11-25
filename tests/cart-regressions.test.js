@@ -172,6 +172,7 @@ test('orders created at the exact same time have distinct identifiers', async ()
  const code=functionSource('createOrderNumber','buildWhatsAppMessage');
  const result=run(code+';Array.from({length:10000},createOrderNumber)',{crypto:webcrypto,Date:{now:()=>123456789}});
  assert.equal(new Set(result).size,10000);
+ assert.ok(result.every(code => /^[0-9A-HJKMNP-TV-Z]{10}$/.test(code)));
 });
 
 test('checkout follows changed official hours, previous-day overnight hours and closing boundary', () => {

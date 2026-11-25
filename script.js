@@ -1571,7 +1571,8 @@ function renderOrderReview() {
 }
 
 function createOrderNumber() {
-  return `KH-${crypto.randomUUID().toUpperCase()}`;
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  return Array.from(crypto.getRandomValues(new Uint8Array(10)), byte => alphabet[byte & 31]).join("");
 }
 
 function buildWhatsAppMessage(orderNumber) {
